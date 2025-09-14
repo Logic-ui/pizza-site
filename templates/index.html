@@ -1,0 +1,27 @@
+{% extends "base.html" %} {% block content %}
+<h1>Pizzas</h1>
+<div class="row">
+  {% for pizza in pizzas %}
+  <div class="col-md-4 mb-4">
+    <div class="card h-100">
+      <img
+        src="{{ url_for('static', path='images/' + pizza.name.lower() + '.jpeg') }}"
+        class="card-img-top"
+        alt="{{ pizza.name }}"
+      />
+      <div class="card-body">
+        <h5 class="card-title">{{pizza.name}}</h5>
+        <p class="card-text">{{pizza.description}}</p>
+        <p><strong>${{ '%.2f'|format(pizza.price) }}</strong></p>
+        <button
+          class="btn btn-primary"
+          onclick="addToCart({{pizza.id}}, '{{pizza.name}}', {{pizza.price}})"
+        >
+          Add to cart
+        </button>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
