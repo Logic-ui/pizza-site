@@ -1,2 +1,138 @@
 /* app/static/css/main.css */
 .card img { object-fit: cover; height: 180px; }
+/* ====== Global Styling ====== */
+body {
+  font-family: "Poppins", sans-serif;
+  background: #f9fafc;
+  color: #333;
+  transition: background 0.3s ease-in-out;
+}
+
+/* ====== Navbar ====== */
+.navbar {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: 1px;
+  color: #d6336c !important;
+}
+.navbar .btn {
+  transition: transform 0.2s ease, background 0.3s ease;
+}
+.navbar .btn:hover {
+  transform: scale(1.05);
+}
+
+/* ====== Headings ====== */
+h1, h2, h5 {
+  font-weight: 600;
+  color: #222;
+}
+
+/* ====== Card Styling (Pizza Items) ====== */
+.card {
+  border: none;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+.card-img-top {
+  height: 220px;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+.card:hover .card-img-top {
+  transform: scale(1.05);
+}
+.card-title {
+  color: #d6336c;
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+/* ====== Buttons ====== */
+.btn-primary {
+  background: linear-gradient(135deg, #d6336c, #ff6b6b);
+  border: none;
+  border-radius: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(214, 51, 108, 0.3);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #38b000, #70e000);
+  border: none;
+  border-radius: 8px;
+}
+.btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(56, 176, 0, 0.3);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #e63946, #ff4d6d);
+  border: none;
+}
+.btn-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(230, 57, 70, 0.3);
+}
+
+/* ====== Table Styling (Admin & Cart) ====== */
+.table {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.table th {
+  background: #f1f3f5;
+  font-weight: 600;
+}
+.table td, .table th {
+  padding: 14px;
+  vertical-align: middle;
+}
+
+/* ====== Forms ====== */
+form .form-control, textarea {
+  border-radius: 8px;
+  border: 1px solid #ced4da;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+form .form-control:focus {
+  border-color: #d6336c;
+  box-shadow: 0 0 6px rgba(214, 51, 108, 0.2);
+}
+
+/* ====== Alerts ====== */
+.alert {
+  border-radius: 8px;
+  animation: fadeIn 0.6s ease;
+}
+
+/* ====== Animations ====== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pop {
+  0%   { transform: scale(0.95); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Animate modals, cards, and forms */
+.card, form, .table, .alert {
+  animation: pop 0.5s ease;
+}

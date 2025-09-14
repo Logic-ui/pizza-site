@@ -1,12 +1,14 @@
-{% extends "base.html" %}
-{% block content %}
+{% extends "base.html" %} {% block content %}
 <h1>Admin - Manage Pizzas</h1>
 <a class="btn btn-success mb-3" href="/admin/pizzas/new">➕ Add Pizza</a>
 
 <table class="table table-striped">
   <thead>
     <tr>
-      <th>ID</th><th>Name</th><th>Price</th><th>Actions</th>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Price</th>
+      <th>Actions</th>
     </tr>
   </thead>
   <tbody>
@@ -16,9 +18,17 @@
       <td>{{ pizza.name }}</td>
       <td>${{ '%.2f'|format(pizza.price) }}</td>
       <td>
-        <a class="btn btn-sm btn-warning" href="/admin/pizzas/edit/{{ pizza.id }}">Edit</a>
-        <form method="post" action="/admin/pizzas/delete/{{ pizza.id }}" style="display:inline;" 
-              onsubmit="return confirm('Are you sure you want to delete this pizza?');">
+        <a
+          class="btn btn-sm btn-warning"
+          href="/admin/pizzas/edit/{{ pizza.id }}"
+          >Edit</a
+        >
+        <form
+          method="post"
+          action="/admin/pizzas/delete/{{ pizza.id }}"
+          style="display: inline"
+          onsubmit="return confirm('Are you sure you want to delete this pizza?');"
+        >
           <button class="btn btn-sm btn-danger" type="submit">Delete</button>
         </form>
       </td>
