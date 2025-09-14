@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ pizza and "Edit Pizza" or "Add Pizza" }}</h1>
+
+<form method="post" action="{{ pizza and '/admin/pizzas/edit/' ~ pizza.id or '/admin/pizzas/new' }}">
+  <div class="mb-3">
+    <label class="form-label">Name</label>
+    <input class="form-control" name="name" value="{{ pizza and pizza.name or '' }}" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Description</label>
+    <textarea class="form-control" name="description">{{ pizza and pizza.description or '' }}</textarea>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Price</label>
+    <input type="number" step="0.01" class="form-control" name="price" value="{{ pizza and pizza.price or '' }}" required>
+  </div>
+  <button type="submit" class="btn btn-primary">Save</button>
+  <a class="btn btn-secondary" href="/admin/pizzas">Cancel</a>
+</form>
+{% endblock %}
