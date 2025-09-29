@@ -1,21 +1,34 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %}
+
+{% block content %}
 <h1>Pizzas</h1>
 <div class="row">
   {% for pizza in pizzas %}
   <div class="col-md-4 mb-4">
     <div class="card h-100">
-      <img
-        src="{{ url_for('static', path='images/' + pizza.name.lower() + '.jpeg') }}"
-        class="card-img-top"
-        alt="{{ pizza.name }}"
-      />
+      {% if pizza.image_filename and pizza.image_filename != "default_pizza.jpeg" %}
+        <img
+          src="{{ pizza.image_url() }}"
+          class="card-img-top"
+          alt="{{ pizza.name }}"
+          style="max-height:200px; object-fit:cover;"
+        />
+      {% else %}
+        <img
+          src="{{ url_for('static', path='uploads/default_pizza.jpeg') }}"
+          class="card-img-top"
+          alt="Default Pizza"
+          style="max-height:200px; object-fit:cover;"
+        />
+      {% endif %}
+
       <div class="card-body">
-        <h5 class="card-title">{{pizza.name}}</h5>
-        <p class="card-text">{{pizza.description}}</p>
+        <h5 class="card-title">{{ pizza.name }}</h5>
+        <p class="card-text">{{ pizza.description }}</p>
         <p><strong>${{ '%.2f'|format(pizza.price) }}</strong></p>
         <button
           class="btn btn-primary"
-          onclick="addToCart({{pizza.id}}, '{{pizza.name}}', {{pizza.price}})"
+          onclick="addToCart({{ pizza.id }}, '{{ pizza.name }}', {{ pizza.price }})"
         >
           Add to cart
         </button>

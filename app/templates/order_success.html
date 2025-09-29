@@ -4,9 +4,9 @@
 <h1>Thanks! Order #{{ order.id }} placed</h1>
 <p>Total: ${{ '%.2f'|format(order.total) }}</p>
 <p>We will contact you at {{ order.customer_email }}</p>
+<p>Contact: {{ order.contact_number }}</p>
 <a class="btn btn-primary" href="/">Back to menu</a>
 <script>
-  // clear cart after success
   localStorage.removeItem("cart");
   document.getElementById("cart-count").textContent = 0;
 </script>

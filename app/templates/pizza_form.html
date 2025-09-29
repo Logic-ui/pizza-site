@@ -1,8 +1,11 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %}
+
+{% block content %}
 <h1>{{ pizza and "Edit Pizza" or "Add Pizza" }}</h1>
 
 <form
   method="post"
+  enctype="multipart/form-data"
   action="{{ pizza and '/admin/pizzas/edit/' ~ pizza.id or '/admin/pizzas/new' }}"
 >
   <div class="mb-3">
@@ -14,12 +17,12 @@
       required
     />
   </div>
+
   <div class="mb-3">
     <label class="form-label">Description</label>
-    <textarea class="form-control" name="description">
-{{ pizza and pizza.description or '' }}</textarea
-    >
+    <textarea class="form-control" name="description">{{ pizza and pizza.description or '' }}</textarea>
   </div>
+
   <div class="mb-3">
     <label class="form-label">Price</label>
     <input
@@ -31,6 +34,25 @@
       required
     />
   </div>
+
+  <div class="mb-3">
+    <label class="form-label">Pizza Image</label>
+    <input
+      type="file"
+      name="image"
+      accept=".png,.jpg,.jpeg,.svg,.gif"
+      class="form-control"
+    />
+    {% if pizza %}
+      <p class="mt-2">Current Image:</p>
+      <img
+        src="{{ pizza.image_url() if pizza.image_filename else url_for('static', path='uploads/default_pizza.jpeg') }}"
+        alt="Pizza image"
+        style="max-height:120px; object-fit:cover;"
+      />
+    {% endif %}
+  </div>
+
   <button type="submit" class="btn btn-primary">Save</button>
   <a class="btn btn-secondary" href="/admin/pizzas">Cancel</a>
 </form>

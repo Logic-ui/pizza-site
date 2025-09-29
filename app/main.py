@@ -1,68 +1,102 @@
-# app/main.py
-from fastapi import status
-from fastapi.responses import RedirectResponse
-from fastapi import FastAPI, Request, Form, Depends, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi import status, UploadFile, File, FastAPI, Request, Form, Depends, HTTPException
+from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-import json
+import json, os, shutil
+from pathlib import Path
 
 from . import models
 from .database import engine, get_db
 
-app = FastAPI()
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
-templates = Jinja2Templates(directory="app/templates")
 
-# create DB tables
+app = FastAPI()
+
+BASE_DIR = Path(__file__).resolve().parent
+
+# Mount static and templates
+app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
+templates = Jinja2Templates(directory=BASE_DIR / "templates")
+
+# Ensure uploads folder exists
+UPLOAD_DIR = BASE_DIR / "static" / "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# Create DB tables
 models.Base.metadata.create_all(bind=engine)
 
-# seed some pizzas if DB empty
+
+# ----------------- SEED PIZZAS -----------------
 @app.on_event("startup")
 def startup():
     db = next(get_db())
     try:
         if db.query(models.Pizza).count() == 0:
             db.add_all([
-                models.Pizza(name="Margherita", description="Tomato, mozzarella, basil", price=6.5),
-                models.Pizza(name="Pepperoni", description="Pepperoni & cheese", price=8.5),
-                models.Pizza(name="Veggie", description="Peppers, onions, mushrooms", price=7.5),
+                models.Pizza(
+                    name="Margherita",
+                    description="Tomato, mozzarella, basil",
+                    price=6.5,
+                    image_filename="margherita.jpeg"
+                ),
+                models.Pizza(
+                    name="Pepperoni",
+                    description="Pepperoni & cheese",
+                    price=8.5,
+                    image_filename="pepperoni.jpeg"
+                ),
+                models.Pizza(
+                    name="Veggie",
+                    description="Peppers, onions, mushrooms",
+                    price=7.5,
+                    image_filename="veggie.jpeg"
+                ),
             ])
             db.commit()
     finally:
         db.close()
 
 
+# ----------------- USER ROUTES -----------------
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request, db: Session = Depends(get_db)):
     pizzas = db.query(models.Pizza).all()
     return templates.TemplateResponse("index.html", {"request": request, "pizzas": pizzas})
 
+
 @app.get("/cart", response_class=HTMLResponse)
 def cart_page(request: Request):
     return templates.TemplateResponse("cart.html", {"request": request})
+
 
 @app.post("/order", response_class=HTMLResponse)
 async def create_order(
     request: Request,
     customer_name: str = Form(...),
     customer_email: str = Form(...),
+    contact_number: str = Form(...),
     address: str = Form(...),
     cart: str = Form(...),
     db: Session = Depends(get_db),
 ):
-    # cart comes as JSON string from client
     try:
         items = json.loads(cart)
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid cart data")
 
     if not items:
-        return templates.TemplateResponse("order_success.html", {"request": request, "error": "Cart is empty."})
+        return templates.TemplateResponse(
+            "order_success.html", {"request": request, "error": "Cart is empty."}
+        )
 
-    # create order record (total will be computed server-side)
-    order = models.Order(customer_name=customer_name, customer_email=customer_email, address=address, total=0.0)
+    # Create new order
+    order = models.Order(
+        customer_name=customer_name,
+        customer_email=customer_email,
+        contact_number=contact_number,
+        address=address,
+        total=0.0,
+    )
     db.add(order)
     db.commit()
     db.refresh(order)
@@ -71,32 +105,42 @@ async def create_order(
     for it in items:
         pid = int(it.get("pizza_id"))
         qty = int(it.get("quantity", 1))
+        size = it.get("size", "Regular")
+
         pizza = db.query(models.Pizza).filter_by(id=pid).first()
         if pizza is None:
-            # skip invalid pizza (or you can return 400)
             continue
+
         item_total = pizza.price * qty
         total += item_total
-        db_item = models.OrderItem(order_id=order.id, pizza_id=pid, pizza_name=pizza.name, quantity=qty, price=pizza.price)
+
+        db_item = models.OrderItem(
+            order_id=order.id,
+            pizza_id=pizza.id,
+            size=size,
+            quantity=qty,
+            price=pizza.price,  # snapshot of price at order time
+        )
         db.add(db_item)
 
     order.total = total
     db.commit()
     db.refresh(order)
 
-    # Clear cart is client-side (JS) after success
     return templates.TemplateResponse("order_success.html", {"request": request, "order": order})
 
-# ----------------- ADMIN ROUTES -----------------
 
+# ----------------- ADMIN ROUTES -----------------
 @app.get("/admin/pizzas", response_class=HTMLResponse)
 def list_pizzas(request: Request, db: Session = Depends(get_db)):
     pizzas = db.query(models.Pizza).all()
     return templates.TemplateResponse("admin_pizzas.html", {"request": request, "pizzas": pizzas})
 
+
 @app.get("/admin/pizzas/new", response_class=HTMLResponse)
 def new_pizza_form(request: Request):
     return templates.TemplateResponse("pizza_form.html", {"request": request, "pizza": None})
+
 
 @app.post("/admin/pizzas/new")
 def create_pizza(
@@ -104,12 +148,26 @@ def create_pizza(
     name: str = Form(...),
     description: str = Form(""),
     price: float = Form(...),
+    image: UploadFile = File(None),
     db: Session = Depends(get_db),
 ):
-    pizza = models.Pizza(name=name, description=description, price=price)
+    filename = "default_pizza.jpeg"
+    if image:
+        filename = image.filename
+        filepath = UPLOAD_DIR / filename
+        with open(filepath, "wb") as buffer:
+            shutil.copyfileobj(image.file, buffer)
+
+    pizza = models.Pizza(
+        name=name,
+        description=description,
+        price=price,
+        image_filename=filename,
+    )
     db.add(pizza)
     db.commit()
     return RedirectResponse(url="/admin/pizzas", status_code=status.HTTP_303_SEE_OTHER)
+
 
 @app.get("/admin/pizzas/edit/{pizza_id}", response_class=HTMLResponse)
 def edit_pizza_form(request: Request, pizza_id: int, db: Session = Depends(get_db)):
@@ -125,6 +183,7 @@ def update_pizza(
     name: str = Form(...),
     description: str = Form(""),
     price: float = Form(...),
+    image: UploadFile = File(None),
     db: Session = Depends(get_db),
 ):
     pizza = db.query(models.Pizza).filter_by(id=pizza_id).first()
@@ -134,8 +193,19 @@ def update_pizza(
     pizza.name = name
     pizza.description = description
     pizza.price = price
+
+    if image and image.filename:
+        filename = os.path.basename(image.filename)
+        filepath = UPLOAD_DIR / filename
+
+        with open(filepath, "wb") as buffer:
+            shutil.copyfileobj(image.file, buffer)
+
+        pizza.image_filename = filename
+
     db.commit()
     return RedirectResponse(url="/admin/pizzas", status_code=status.HTTP_303_SEE_OTHER)
+
 
 @app.post("/admin/pizzas/delete/{pizza_id}")
 def delete_pizza(pizza_id: int, db: Session = Depends(get_db)):
