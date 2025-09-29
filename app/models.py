@@ -27,7 +27,6 @@ class Order(Base):
     id = Column(Integer, primary_key=True, index=True)
     customer_name = Column(String(100), nullable=False)
     customer_email = Column(String(100), nullable=False)
-    Contact_number = Column(String(15), nullable=False)
     address = Column(Text, nullable=False)
     total = Column(Float, default=0.0)
     status = Column(String(50), default="pending")

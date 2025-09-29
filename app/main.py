@@ -74,7 +74,6 @@ async def create_order(
     request: Request,
     customer_name: str = Form(...),
     customer_email: str = Form(...),
-    contact_number: str = Form(...),
     address: str = Form(...),
     cart: str = Form(...),
     db: Session = Depends(get_db),
@@ -93,7 +92,6 @@ async def create_order(
     order = models.Order(
         customer_name=customer_name,
         customer_email=customer_email,
-        contact_number=contact_number,
         address=address,
         total=0.0,
     )
