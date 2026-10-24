@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account &middot; Crust & Flame{% endblock %}
+
+{% block content %}
+<div style="max-width: 520px; margin: 2rem auto;">
+  <div class="checkout-card" style="padding: 2.5rem 2rem;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <span class="brand-icon" style="margin: 0 auto 1rem; width: 56px; height: 56px; font-size: 1.75rem;">🍕</span>
+      <h1 class="section-title" style="font-size: 1.85rem; margin-bottom: 0.35rem;">Join Crust & Flame</h1>
+      <p style="color: var(--text-muted); font-size: 0.95rem;">
+        Enjoy express checkout, order tracking, and exclusive discounts.
+      </p>
+    </div>
+
+    {% if error %}
+      <div class="alert alert-danger" style="margin-bottom: 1.5rem;">
+        {{ error }}
+      </div>
+    {% endif %}
+
+    <form method="post" action="/auth/register">
+      <div class="form-group">
+        <label class="form-label" for="reg-name">
+          Full Name <span class="required">*</span>
+        </label>
+        <input
+          id="reg-name"
+          name="full_name"
+          class="form-control"
+          placeholder="e.g. Maria Romano"
+          required
+          autofocus
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg-email">
+          Email Address <span class="required">*</span>
+        </label>
+        <input
+          id="reg-email"
+          type="email"
+          name="email"
+          class="form-control"
+          placeholder="maria@example.com"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg-phone">
+          Phone Number
+        </label>
+        <input
+          id="reg-phone"
+          type="tel"
+          name="phone"
+          class="form-control"
+          placeholder="(555) 123-4567"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg-address">
+          Default Delivery Address
+        </label>
+        <textarea
+          id="reg-address"
+          name="address"
+          class="form-control"
+          placeholder="Street address, apartment or suite number, city, postal code"
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg-password">
+          Create Password <span class="required">*</span>
+        </label>
+        <input
+          id="reg-password"
+          type="password"
+          name="password"
+          class="form-control"
+          placeholder="At least 6 characters"
+          minlength="6"
+          required
+        />
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 1rem;">
+        <span>✨</span> Create My Account
+      </button>
+    </form>
+
+    <div style="text-align: center; margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color); font-size: 0.92rem; color: var(--text-muted);">
+      Already have an account?
+      <a href="/auth/login" style="color: var(--primary); font-weight: 700; margin-left: 4px;">
+        Sign In &rarr;
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}My Account &middot; Crust & Flame{% endblock %}
+
+{% block content %}
+<div class="cart-page-header">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <div class="section-tag">
+        <span>👤</span> Account Profile
+      </div>
+      <h1 class="section-title">Hello, {{ user.full_name }}</h1>
+      <p class="section-subtitle">
+        Manage your delivery address, personal details, and past pizza orders.
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 0.75rem;">
+      {% if user.is_staff() %}
+        <a href="/admin" class="btn btn-dark">
+          <span>⚙️</span> Admin Portal
+        </a>
+      {% endif %}
+      <a href="/auth/logout" class="btn btn-secondary">
+        <span>🚪</span> Sign Out
+      </a>
+    </div>
+  </div>
+</div>
+
+{% if request.query_params.get('updated') %}
+  <div class="alert alert-success">
+    ✓ Your profile details have been successfully updated.
+  </div>
+{% endif %}
+
+<div class="cart-layout">
+  <!-- Left Column: Order History -->
+  <div class="cart-card">
+    <div class="cart-card-header">
+      <h2>Order History ({{ orders|length }})</h2>
+      <a href="/#menu" class="btn btn-sm btn-primary">
+        <span>+</span> New Order
+      </a>
+    </div>
+
+    {% if orders %}
+      <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+        {% for ord in orders %}
+          <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-subtle);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+              <div>
+                <strong>Order #{{ ord.order_number or ord.id }}</strong>
+                <span style="font-size: 0.82rem; color: var(--text-muted); margin-left: 6px;">
+                  {{ ord.created_at.strftime('%b %d, %Y - %I:%M %p') }}
+                </span>
+              </div>
+
+              {# Status Pill #}
+              {% set st = ord.status %}
+              {% if st == 'Delivered' %}
+                <span style="background: var(--secondary-soft); color: var(--secondary); font-weight: 700; font-size: 0.8rem; padding: 0.25rem 0.75rem; border-radius: var(--radius-full);">
+                  ✓ Delivered
+                </span>
+              {% elif st == 'Out for Delivery' %}
+                <span style="background: #FFF4E6; color: #D9480F; font-weight: 700; font-size: 0.8rem; padding: 0.25rem 0.75rem; border-radius: var(--radius-full);">
+                  🛵 Out for Delivery
+                </span>
+              {% elif st == 'Preparing' %}
+                <span style="background: #E7F5FF; color: #1971C2; font-weight: 700; font-size: 0.8rem; padding: 0.25rem 0.75rem; border-radius: var(--radius-full);">
+                  🔥 Baking in Stone Oven
+                </span>
+              {% else %}
+                <span style="background: var(--primary-soft); color: var(--primary); font-weight: 700; font-size: 0.8rem; padding: 0.25rem 0.75rem; border-radius: var(--radius-full);">
+                  📋 Order Received
+                </span>
+              {% endif %}
+            </div>
+
+            <!-- Items summary -->
+            <ul style="list-style: none; margin: 0.75rem 0; font-size: 0.9rem;">
+              {% for it in ord.items %}
+                <li style="display: flex; justify-content: space-between; padding: 0.2rem 0; border-bottom: 1px dashed rgba(0,0,0,0.06);">
+                  <span>
+                    {{ it.quantity }}x {{ it.menu_item.name if it.menu_item else 'Pizza Item' }}
+                    {% if it.size and it.size != 'Regular' %}<span style="color: var(--text-muted);">({{ it.size }})</span>{% endif %}
+                  </span>
+                  <span>${{ '%.2f'|format(it.line_total if it.line_total else it.unit_price * it.quantity) }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem; padding-top: 0.5rem;">
+              <span style="font-size: 1.05rem; font-weight: 800;">
+                Total: ${{ '%.2f'|format(ord.total) }}
+              </span>
+
+              <div style="display: flex; gap: 0.5rem;">
+                <a href="/orders/{{ ord.id }}" class="btn btn-sm btn-secondary">
+                  Track Status &rarr;
+                </a>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-primary"
+                  onclick="reorderItems({{ ord.id }})"
+                >
+                  🔁 Reorder
+                </button>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 3rem 1rem;">
+        <span style="font-size: 3rem;">🍕</span>
+        <h3 style="margin-top: 0.5rem;">No orders yet</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.25rem;">
+          You haven't ordered any pizzas yet. Ready to taste authentic wood-fired perfection?
+        </p>
+        <a href="/#menu" class="btn btn-primary">Browse Menu</a>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Right Column: Profile Edit Form -->
+  <div class="checkout-card">
+    <h2 style="font-size: 1.35rem; margin-bottom: 1.25rem;">Personal Details</h2>
+
+    <form method="post" action="/profile">
+      <div class="form-group">
+        <label class="form-label" for="prof-name">Full Name</label>
+        <input
+          id="prof-name"
+          name="full_name"
+          value="{{ user.full_name }}"
+          class="form-control"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input
+          type="email"
+          value="{{ user.email }}"
+          class="form-control"
+          disabled
+          style="background: var(--bg-subtle); color: var(--text-muted);"
+        />
+        <div class="form-help">Email cannot be changed once registered.</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="prof-phone">Phone Number</label>
+        <input
+          id="prof-phone"
+          name="phone"
+          value="{{ user.phone or '' }}"
+          class="form-control"
+          placeholder="(555) 000-0000"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="prof-addr">Delivery Address</label>
+        <textarea
+          id="prof-addr"
+          name="address"
+          class="form-control"
+          placeholder="Default delivery address"
+        >{{ user.address or '' }}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="prof-pw">Change Password (optional)</label>
+        <input
+          id="prof-pw"
+          type="password"
+          name="new_password"
+          class="form-control"
+          placeholder="Leave blank to keep existing password"
+          minlength="6"
+        />
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
+        Save Changes
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Reorder helper
+  async function reorderItems(orderId) {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/reorder`, { method: "POST" });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        localStorage.setItem("cart", JSON.stringify(data.cart));
+        window.cart = data.cart;
+        updateCartCount();
+        window.location.href = "/cart";
+      } else {
+        alert(data.message || "Could not reorder items.");
+      }
+    } catch (e) {
+      console.error(e);
+      window.location.href = "/cart";
+    }
+  }
+</script>
+{% endblock %}

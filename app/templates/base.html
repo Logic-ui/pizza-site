@@ -33,11 +33,28 @@
               <li><a class="nav-link" href="/">Home</a></li>
               <li><a class="nav-link" href="/#menu">Menu</a></li>
               <li><a class="nav-link" href="/cart">Cart</a></li>
-              <li><a class="nav-link" href="/admin/pizzas">Admin Portal</a></li>
+              {% if user or (request.state.user is defined and request.state.user) %}
+                {% set u = user or request.state.user %}
+                <li><a class="nav-link" href="/profile">My Orders</a></li>
+                {% if u.is_staff() %}
+                  <li><a class="nav-link" href="/admin" style="color: var(--primary); font-weight: 700;">Admin</a></li>
+                {% endif %}
+              {% endif %}
             </ul>
 
             <!-- Header Action Controls -->
             <div class="nav-actions">
+              {% if user or (request.state.user is defined and request.state.user) %}
+                {% set u = user or request.state.user %}
+                <a href="/profile" class="btn btn-sm btn-secondary" title="View Profile">
+                  <span>👤</span> <span>{{ u.full_name.split(' ')[0] }}</span>
+                </a>
+              {% else %}
+                <a href="/auth/login" class="btn btn-sm btn-secondary" title="Sign In">
+                  <span>🔐</span> <span>Sign In</span>
+                </a>
+              {% endif %}
+
               <a class="cart-btn" href="/cart" id="header-cart-btn" title="View Cart">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="9" cy="21" r="1"></circle>
@@ -91,11 +108,32 @@
               <span>🛒</span> Your Cart (<span id="mobile-cart-count">0</span>)
             </a>
           </li>
-          <li>
-            <a class="mobile-link" href="/admin/pizzas">
-              <span>⚙️</span> Admin Dashboard
-            </a>
-          </li>
+          {% if user or (request.state.user is defined and request.state.user) %}
+            {% set u = user or request.state.user %}
+            <li>
+              <a class="mobile-link" href="/profile">
+                <span>👤</span> Account & Orders ({{ u.full_name.split(' ')[0] }})
+              </a>
+            </li>
+            {% if u.is_staff() %}
+              <li>
+                <a class="mobile-link" href="/admin">
+                  <span>⚙️</span> Admin Dashboard
+                </a>
+              </li>
+            {% endif %}
+            <li>
+              <a class="mobile-link" href="/auth/logout" style="color: #FA5252;">
+                <span>🚪</span> Sign Out
+              </a>
+            </li>
+          {% else %}
+            <li>
+              <a class="mobile-link" href="/auth/login">
+                <span>🔐</span> Sign In / Register
+              </a>
+            </li>
+          {% endif %}
         </ul>
 
         <div class="mobile-nav-footer">

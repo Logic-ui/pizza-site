@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Menu Items &middot; Admin | Crust & Flame{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+  <div>
+    <div class="section-tag">
+      <span>🍕</span> Kitchen Offerings
+    </div>
+    <h1 class="section-title">Menu Management</h1>
+    <p class="section-subtitle">
+      Control availability, add new recipes, and update pricing for pizzas, sides, and drinks.
+    </p>
+  </div>
+
+  <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+    <a href="/admin" class="btn btn-secondary">&larr; Dashboard</a>
+    <a href="/admin/menu/new" class="btn btn-primary">
+      <span>➕</span> Add New Menu Item
+    </a>
+  </div>
+</div>
+
+<div class="admin-card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <h3 style="font-size: 1.2rem;">All Menu Items ({{ items|length }})</h3>
+    <a href="/#menu" target="_blank" class="btn btn-sm btn-secondary">
+      <span>👁️</span> View Customer Menu &nearr;
+    </a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th style="width: 70px;">ID</th>
+          <th style="width: 80px;">Photo</th>
+          <th>Name & Description</th>
+          <th>Category</th>
+          <th>Base Price</th>
+          <th>Availability</th>
+          <th style="text-align: right; width: 160px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for it in items %}
+          <tr style="{{ 'opacity: 0.6;' if not it.is_available else '' }}">
+            <td><strong>#{{ it.id }}</strong></td>
+            <td>
+              <img src="{{ it.image_url() }}" alt="{{ it.name }}" class="admin-pizza-thumb" />
+            </td>
+            <td>
+              <strong style="font-size: 1.05rem; display: block;">{{ it.name }}</strong>
+              <span style="font-size: 0.82rem; color: var(--text-muted); display: block; max-width: 320px;">
+                {{ it.description }}
+              </span>
+              {% if it.is_vegetarian %}<span style="font-size: 0.72rem; color: var(--secondary); font-weight: 700;">🌿 Vegetarian</span>{% endif %}
+              {% if it.is_spicy %}<span style="font-size: 0.72rem; color: #FA5252; font-weight: 700; margin-left: 4px;">🌶️ Spicy</span>{% endif %}
+            </td>
+            <td>
+              <span style="background: var(--bg-subtle); padding: 2px 8px; border-radius: var(--radius-full); font-size: 0.8rem; font-weight: 600;">
+                {{ it.category.name if it.category else 'Pizzas' }}
+              </span>
+            </td>
+            <td>
+              <strong style="font-size: 1.05rem;">${{ '%.2f'|format(it.base_price) }}</strong>
+            </td>
+            <td>
+              <form method="post" action="/admin/menu/toggle/{{ it.id }}" style="display: inline;">
+                <button type="submit" class="btn btn-sm {{ 'btn-success' if it.is_available else 'btn-secondary' }}" style="padding: 2px 8px; font-size: 0.78rem;">
+                  {{ '✓ Active' if it.is_available else '✕ Inactive' }}
+                </button>
+              </form>
+            </td>
+            <td style="text-align: right;">
+              <div style="display: inline-flex; gap: 4px;">
+                <a href="/admin/menu/edit/{{ it.id }}" class="btn btn-sm btn-secondary">
+                  ✏️ Edit
+                </a>
+                <form method="post" action="/admin/menu/delete/{{ it.id }}" onsubmit="return confirm('Delete this menu item?');" style="display: inline;">
+                  <button type="submit" class="btn btn-sm btn-danger">
+                    🗑️
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+              No menu items created yet.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Customers Directory &middot; Admin | Crust & Flame{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+  <div>
+    <div class="section-tag">
+      <span>👥</span> Loyalty & Accounts
+    </div>
+    <h1 class="section-title">Customer Directory ({{ customers|length }})</h1>
+    <p class="section-subtitle">
+      Registered customer profiles, contact information, and order counts.
+    </p>
+  </div>
+
+  <div style="display: flex; gap: 0.75rem;">
+    <a href="/admin" class="btn btn-secondary">&larr; Back to Dashboard</a>
+  </div>
+</div>
+
+<div class="admin-card">
+  <div class="table-responsive">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>User ID</th>
+          <th>Customer Name</th>
+          <th>Email Address</th>
+          <th>Phone</th>
+          <th>Role</th>
+          <th>Orders Placed</th>
+          <th>Member Since</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cust in customers %}
+          <tr>
+            <td><strong>#{{ cust.id }}</strong></td>
+            <td><strong>{{ cust.full_name }}</strong></td>
+            <td>{{ cust.email }}</td>
+            <td>{{ cust.phone or 'Not provided' }}</td>
+            <td>
+              <span style="font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: var(--radius-full); 
+                {% if cust.role == 'admin' %}background: var(--primary-soft); color: var(--primary);
+                {% elif cust.role == 'staff' %}background: #E7F5FF; color: #1971C2;
+                {% else %}background: var(--bg-subtle); color: var(--text-main);{% endif %}">
+                {{ cust.role.upper() }}
+              </span>
+            </td>
+            <td><strong>{{ cust.orders|length }}</strong> orders</td>
+            <td><span style="font-size: 0.85rem; color: var(--text-muted);">{{ cust.created_at.strftime('%b %d, %Y') }}</span></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

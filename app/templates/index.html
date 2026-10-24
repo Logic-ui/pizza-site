@@ -110,85 +110,294 @@
     <div class="section-tag">
       <span>🍕</span> Handcrafted Selection
     </div>
-    <h2 class="section-title">Explore Our Pizzas</h2>
+    <h2 class="section-title">Explore Our Full Menu</h2>
     <p class="section-subtitle">
-      Each pizza is individually stretched by hand and baked to blistered perfection.
+      Pizzas, artisan sides, refreshing drinks, and value combo deals.
     </p>
+
+    <!-- Search Bar -->
+    <div style="max-width: 440px; margin: 1.5rem auto 0; position: relative;">
+      <input
+        type="text"
+        id="menu-search-input"
+        class="form-control"
+        placeholder="🔍 Search pizzas, toppings, ingredients..."
+        style="padding-left: 1.25rem; border-radius: var(--radius-full); box-shadow: var(--shadow-sm);"
+        onkeyup="filterMenuItems()"
+      />
+    </div>
   </div>
 
-  <!-- Menu Filters -->
+  <!-- Category Filter Tabs -->
   <div class="menu-filter-bar">
-    <button class="filter-btn active" data-filter="all">All Pizzas</button>
-    <button class="filter-btn" data-filter="classic">Classics</button>
-    <button class="filter-btn" data-filter="veggie">Vegetarian</button>
-    <button class="filter-btn" data-filter="special">Chef Specials</button>
+    <button class="filter-btn active" data-category="all" onclick="selectCategory('all', this)">
+      All Items
+    </button>
+    {% for cat in categories %}
+      <button class="filter-btn" data-category="{{ cat.slug }}" onclick="selectCategory('{{ cat.slug }}', this)">
+        {{ cat.name }}
+      </button>
+    {% endfor %}
   </div>
 
-  <!-- Pizzas Grid -->
-  <div class="pizza-grid">
-    {% for pizza in pizzas %}
-      {% set name_lower = pizza.name.lower() %}
-      {% set desc_lower = (pizza.description or '').lower() %}
-      
-      {# Determine category and tag #}
-      {% if 'veggie' in name_lower or 'veg' in name_lower or 'mushroom' in desc_lower %}
-        {% set cat = "veggie" %}
-        {% set badge_text = "🌿 Vegetarian" %}
-      {% elif 'pepperoni' in name_lower or 'bbq' in name_lower or 'chicken' in name_lower %}
-        {% set cat = "special" %}
-        {% set badge_text = "🔥 House Favorite" %}
-      {% else %}
-        {% set cat = "classic" %}
-        {% set badge_text = "⭐ Classic" %}
-      {% endif %}
-
-      <article class="pizza-card" data-category="{{ cat }}">
+  <!-- Menu Items Grid -->
+  <div class="pizza-grid" id="menu-items-grid">
+    {% for it in items %}
+      {% set cat_slug = it.category.slug if it.category else 'pizzas' %}
+      <article
+        class="pizza-card menu-card-item"
+        data-id="{{ it.id }}"
+        data-category="{{ cat_slug }}"
+        data-name="{{ it.name|lower }}"
+        data-desc="{{ (it.description or '')|lower }}"
+        data-base-price="{{ it.base_price }}"
+        data-is-pizza="{{ 'true' if cat_slug == 'pizzas' else 'false' }}"
+      >
         <div class="pizza-card-img-wrap">
-          {% if pizza.image_filename and pizza.image_filename != "default_pizza.jpeg" %}
-            <img
-              src="{{ pizza.image_url() }}"
-              alt="{{ pizza.name }}"
-              loading="lazy"
-            />
-          {% else %}
-            <img
-              src="/static/uploads/default_pizza.jpeg"
-              alt="{{ pizza.name }}"
-              loading="lazy"
-            />
-          {% endif %}
-          <span class="pizza-tag">{{ badge_text }}</span>
-          <span class="pizza-price-pill">${{ '%.2f'|format(pizza.price) }}</span>
+          <img
+            src="{{ it.image_url() }}"
+            alt="{{ it.name }}"
+            loading="lazy"
+          />
+
+          <!-- Badges -->
+          <div style="position: absolute; top: 1rem; left: 1rem; display: flex; flex-direction: column; gap: 4px;">
+            {% if it.is_vegetarian %}
+              <span class="pizza-tag" style="color: var(--secondary);">🌿 Vegetarian</span>
+            {% elif it.is_spicy %}
+              <span class="pizza-tag" style="color: #FA5252;">🌶️ Spicy</span>
+            {% elif it.is_featured %}
+              <span class="pizza-tag" style="color: var(--primary);">🔥 Chef's Pick</span>
+            {% endif %}
+          </div>
+
+          <span class="pizza-price-pill">${{ '%.2f'|format(it.base_price) }}</span>
         </div>
 
         <div class="pizza-card-body">
-          <h3 class="pizza-card-title">{{ pizza.name }}</h3>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <h3 class="pizza-card-title">{{ it.name }}</h3>
+            <!-- Rating Star Badge -->
+            <button
+              type="button"
+              onclick="openReviewModal({{ it.id }}, '{{ it.name|replace('\'', '\\\'') }}')"
+              style="background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 3px; font-size: 0.85rem; font-weight: 700; color: #F59F00;"
+              title="View & add reviews"
+            >
+              <span>★</span> {{ it.average_rating() }}
+            </button>
+          </div>
+
           <p class="pizza-card-desc">
-            {{ pizza.description if pizza.description else "Crafted with our signature sourdough, vine-ripened tomato sauce, and whole milk mozzarella." }}
+            {{ it.description }}
           </p>
 
           <div class="pizza-card-footer">
             <div class="pizza-card-price">
-              ${{ '%.2f'|format(pizza.price) }}
+              ${{ '%.2f'|format(it.base_price) }}
             </div>
 
-            <button
-              type="button"
-              class="btn btn-add-cart"
-              id="add-btn-{{ pizza.id }}"
-              onclick="addToCart({{ pizza.id }}, '{{ pizza.name|replace('\'', '\\\'') }}', {{ pizza.price }})"
-              aria-label="Add {{ pizza.name }} to cart"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-              <span>Add to Cart</span>
-            </button>
+            {% if cat_slug == 'pizzas' %}
+              <!-- Pizza Customization Button -->
+              <button
+                type="button"
+                class="btn btn-add-cart"
+                onclick="openCustomizationModal({{ it.id }}, '{{ it.name|replace('\'', '\\\'') }}', {{ it.base_price }}, '{{ it.image_url() }}', '{{ it.description|replace('\'', '\\\'') }}')"
+                aria-label="Customize {{ it.name }}"
+              >
+                <span>⚙️</span> Customize
+              </button>
+            {% else %}
+              <!-- Direct Add Button for Sides/Drinks -->
+              <button
+                type="button"
+                class="btn btn-add-cart"
+                onclick="addToCart({{ it.id }}, '{{ it.name|replace('\'', '\\\'') }}', {{ it.base_price }})"
+                aria-label="Add {{ it.name }} to cart"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>Add to Cart</span>
+              </button>
+            {% endif %}
           </div>
         </div>
       </article>
     {% endfor %}
   </div>
 </section>
+
+<!-- ==================== PIZZA CUSTOMIZATION MODAL ==================== -->
+<div id="custom-modal-backdrop" class="mobile-nav-backdrop" onclick="closeCustomizationModal()"></div>
+<div id="custom-modal" class="custom-modal-dialog" style="display: none;">
+  <div class="custom-modal-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+      <div>
+        <span class="section-tag" style="margin-bottom: 0.25rem;">Custom Artisan Pizza</span>
+        <h2 id="modal-pizza-name" style="font-size: 1.5rem; margin: 0;">Customize Pizza</h2>
+      </div>
+      <button type="button" class="close-drawer-btn" onclick="closeCustomizationModal()">&times;</button>
+    </div>
+
+    <div style="max-height: 70vh; overflow-y: auto; padding-right: 0.5rem;">
+      <!-- Size Option -->
+      <div style="margin-bottom: 1.5rem;">
+        <label class="form-label">1. Choose Size</label>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;">
+          <label class="size-radio-label">
+            <input type="radio" name="modal_size" value="Small" data-mult="0.85" onchange="recalculateModalPrice()" />
+            <span>Small (10")</span>
+          </label>
+          <label class="size-radio-label">
+            <input type="radio" name="modal_size" value="Regular" data-mult="1.0" checked onchange="recalculateModalPrice()" />
+            <span>Regular (12")</span>
+          </label>
+          <label class="size-radio-label">
+            <input type="radio" name="modal_size" value="Large" data-mult="1.35" onchange="recalculateModalPrice()" />
+            <span>Large (14")</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Crust Option -->
+      <div style="margin-bottom: 1.5rem;">
+        <label class="form-label">2. Choose Artisan Crust</label>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+          {% for cr in crusts %}
+            <label class="crust-radio-label">
+              <input
+                type="radio"
+                name="modal_crust"
+                value="{{ cr.id }}"
+                data-name="{{ cr.name }}"
+                data-price="{{ cr.price_modifier }}"
+                {% if loop.first %}checked{% endif %}
+                onchange="recalculateModalPrice()"
+              />
+              <div style="flex: 1;">
+                <strong>{{ cr.name }}</strong>
+                <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">{{ cr.description }}</span>
+              </div>
+              <span style="font-weight: 700; color: var(--text-main);">
+                {{ 'FREE' if cr.price_modifier == 0 else '+$' ~ '%.2f'|format(cr.price_modifier) }}
+              </span>
+            </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Extra Toppings -->
+      <div style="margin-bottom: 1.5rem;">
+        <label class="form-label">3. Add Extra Gourmet Toppings</label>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.5rem;">
+          {% for tp in toppings %}
+            <label class="topping-checkbox-label">
+              <input
+                type="checkbox"
+                class="modal-topping-checkbox"
+                value="{{ tp.id }}"
+                data-name="{{ tp.name }}"
+                data-price="{{ tp.price }}"
+                onchange="recalculateModalPrice()"
+              />
+              <span style="flex: 1; font-size: 0.88rem;">{{ tp.name }}</span>
+              <span style="font-weight: 700; font-size: 0.85rem; color: var(--primary);">+${{ '%.2f'|format(tp.price) }}</span>
+            </label>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer with Real-time Calculated Total -->
+    <div style="margin-top: 1.25rem; padding-top: 1.25rem; border-top: 2px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <span style="font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Total Price:</span>
+        <div id="modal-calculated-price" style="font-size: 1.75rem; font-weight: 800; color: var(--primary);">$0.00</div>
+      </div>
+
+      <button type="button" class="btn btn-primary btn-lg" onclick="addCustomizedPizzaToCart()">
+        <span>🛒</span> Add to Cart
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== ITEM REVIEWS MODAL ==================== -->
+<div id="review-modal-backdrop" class="mobile-nav-backdrop" onclick="closeReviewModal()"></div>
+<div id="review-modal" class="custom-modal-dialog" style="display: none;">
+  <div class="custom-modal-content" style="max-width: 500px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+      <h3 id="review-modal-item-name" style="margin: 0; font-size: 1.25rem;">Item Reviews</h3>
+      <button type="button" class="close-drawer-btn" onclick="closeReviewModal()">&times;</button>
+    </div>
+
+    <div id="review-list-container" style="max-height: 250px; overflow-y: auto; margin-bottom: 1.25rem;">
+      <p style="color: var(--text-muted); font-size: 0.9rem;">Loading reviews...</p>
+    </div>
+
+    <form id="review-form" onsubmit="submitReview(event)" style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
+      <input type="hidden" id="review-item-id" value="" />
+      <h4 style="font-size: 1rem; margin-bottom: 0.5rem;">Write a Review</h4>
+      
+      <div class="form-group">
+        <label class="form-label">Your Rating (1 to 5 Stars)</label>
+        <select id="review-rating-select" class="form-control" required>
+          <option value="5">⭐⭐⭐⭐⭐ 5 - Exceptional</option>
+          <option value="4">⭐⭐⭐⭐ 4 - Very Delicious</option>
+          <option value="3">⭐⭐⭐ 3 - Good</option>
+          <option value="2">⭐⭐ 2 - Average</option>
+          <option value="1">⭐ 1 - Not for me</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Your Feedback / Comments</label>
+        <textarea id="review-comment-input" class="form-control" placeholder="Tell us how you liked the crust, sauce, and toppings..." rows="3" required></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%;">
+        Submit Review
+      </button>
+    </form>
+  </div>
+</div>
+
+<style>
+  .custom-modal-dialog {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .custom-modal-content {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    width: 100%;
+    max-width: 640px;
+    padding: 2rem;
+    position: relative;
+    z-index: 2001;
+    animation: toastSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .size-radio-label, .crust-radio-label, .topping-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.75rem;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  .size-radio-label:hover, .crust-radio-label:hover, .topping-checkbox-label:hover {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+  }
+</style>
 {% endblock %}

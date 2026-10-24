@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Executive Restaurant Dashboard &middot; Crust & Flame{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+  <div>
+    <div class="section-tag">
+      <span>📊</span> Restaurant Operations & Sales
+    </div>
+    <h1 class="section-title">Store Management Dashboard</h1>
+    <p class="section-subtitle">
+      Live sales overview, kitchen metrics, and quick operational controls.
+    </p>
+  </div>
+
+  <div style="display: flex; gap: 0.65rem; flex-wrap: wrap;">
+    <a href="/admin/orders" class="btn btn-primary">
+      <span>🛵</span> Manage Orders
+    </a>
+    <a href="/admin/menu/new" class="btn btn-secondary">
+      <span>➕</span> Add Menu Item
+    </a>
+  </div>
+</div>
+
+<!-- Key Performance Metrics Cards -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2.5rem;">
+  <!-- Card 1: Today's Orders -->
+  <div class="cart-card" style="padding: 1.5rem; border-left: 4px solid var(--primary);">
+    <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Today's Orders</span>
+    <h2 style="font-size: 2.2rem; margin: 0.35rem 0 0.15rem; color: var(--primary);">{{ total_orders_today }}</h2>
+    <span style="font-size: 0.82rem; color: var(--text-muted);">Incoming kitchen volume</span>
+  </div>
+
+  <!-- Card 2: Revenue Today -->
+  <div class="cart-card" style="padding: 1.5rem; border-left: 4px solid var(--accent);">
+    <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Today's Gross Sales</span>
+    <h2 style="font-size: 2.2rem; margin: 0.35rem 0 0.15rem; color: var(--accent);">${{ '%.2f'|format(revenue_today) }}</h2>
+    <span style="font-size: 0.82rem; color: var(--text-muted);">Gross order receipts</span>
+  </div>
+
+  <!-- Card 3: Month Sales -->
+  <div class="cart-card" style="padding: 1.5rem; border-left: 4px solid var(--secondary);">
+    <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Month-to-Date Revenue</span>
+    <h2 style="font-size: 2.2rem; margin: 0.35rem 0 0.15rem; color: var(--secondary);">${{ '%.2f'|format(revenue_month) }}</h2>
+    <span style="font-size: 0.82rem; color: var(--text-muted);">Current calendar month</span>
+  </div>
+
+  <!-- Card 4: Customers -->
+  <div class="cart-card" style="padding: 1.5rem; border-left: 4px solid #1C1917;">
+    <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Registered Members</span>
+    <h2 style="font-size: 2.2rem; margin: 0.35rem 0 0.15rem; color: var(--text-main);">{{ active_customers }}</h2>
+    <span style="font-size: 0.82rem; color: var(--text-muted);">Customer loyalty base</span>
+  </div>
+</div>
+
+<div class="cart-layout" style="grid-template-columns: 1.6fr 1fr;">
+  <!-- Left: Live Orders Feed -->
+  <div class="admin-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+      <h3 style="font-size: 1.2rem;">Live Kitchen & Delivery Feed</h3>
+      <a href="/admin/orders" class="btn btn-sm btn-secondary">View All Orders &rarr;</a>
+    </div>
+
+    <div class="table-responsive">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Order</th>
+            <th>Customer</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Quick Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ord in recent_orders %}
+            <tr>
+              <td>
+                <a href="/orders/{{ ord.id }}" target="_blank" style="font-weight: 700; color: var(--primary);">
+                  #{{ ord.order_number or ord.id }}
+                </a>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">{{ ord.created_at.strftime('%I:%M %p') }}</div>
+              </td>
+              <td>
+                <strong>{{ ord.customer_name }}</strong>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">{{ ord.items|length }} item(s)</div>
+              </td>
+              <td><strong>${{ '%.2f'|format(ord.total) }}</strong></td>
+              <td>
+                {% set st = ord.status %}
+                <span style="display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: var(--radius-full); 
+                  {% if st == 'Delivered' %}background: var(--secondary-soft); color: var(--secondary);
+                  {% elif st == 'Out for Delivery' %}background: #FFF4E6; color: #D9480F;
+                  {% elif st == 'Preparing' %}background: #E7F5FF; color: #1971C2;
+                  {% else %}background: var(--primary-soft); color: var(--primary);{% endif %}">
+                  {{ ord.status }}
+                </span>
+              </td>
+              <td>
+                <form method="post" action="/admin/orders/{{ ord.id }}/status" style="display: flex; gap: 4px;">
+                  <select name="status" class="form-control" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onchange="this.form.submit()">
+                    <option value="Received" {% if ord.status == 'Received' %}selected{% endif %}>Received</option>
+                    <option value="Preparing" {% if ord.status == 'Preparing' %}selected{% endif %}>Preparing</option>
+                    <option value="Out for Delivery" {% if ord.status == 'Out for Delivery' %}selected{% endif %}>Out for Delivery</option>
+                    <option value="Delivered" {% if ord.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                  </select>
+                </form>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No orders recorded yet.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Right: Best Selling Items & Quick Nav -->
+  <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+    <!-- Best Sellers -->
+    <div class="admin-card">
+      <h3 style="font-size: 1.15rem; margin-bottom: 1rem;">🔥 Best-Selling Menu Items</h3>
+      {% if best_sellers %}
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          {% for item in best_sellers %}
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color);">
+              <div>
+                <strong>{{ item[0] }}</strong>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">{{ item[1] }} units sold</div>
+              </div>
+              <strong style="color: var(--secondary);">${{ '%.2f'|format(item[2]) }}</strong>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p style="font-size: 0.9rem; color: var(--text-muted);">Sales trends will appear as customers place orders.</p>
+      {% endif %}
+    </div>
+
+    <!-- Quick Management Hub -->
+    <div class="admin-card">
+      <h3 style="font-size: 1.15rem; margin-bottom: 1rem;">⚙️ Management Sections</h3>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+        <a href="/admin/menu" class="btn btn-secondary" style="font-size: 0.88rem; padding: 0.65rem;">
+          🍕 Menu & Pizzas
+        </a>
+        <a href="/admin/orders" class="btn btn-secondary" style="font-size: 0.88rem; padding: 0.65rem;">
+          📋 All Orders
+        </a>
+        <a href="/admin/coupons" class="btn btn-secondary" style="font-size: 0.88rem; padding: 0.65rem;">
+          🎟️ Coupons & Promo
+        </a>
+        <a href="/admin/customers" class="btn btn-secondary" style="font-size: 0.88rem; padding: 0.65rem;">
+          👥 Customer List
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

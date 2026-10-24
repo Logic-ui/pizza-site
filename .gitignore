@@ -48,3 +48,11 @@ pyrightconfig.json
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Environment variables
+.env
+.env.local
+
+# Local SQLite databases (development)
+*.db-journal
+

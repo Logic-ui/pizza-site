@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Orders &middot; Admin | Crust & Flame{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+  <div>
+    <div class="section-tag">
+      <span>🛵</span> Kitchen & Delivery Queue
+    </div>
+    <h1 class="section-title">Customer Orders ({{ orders|length }})</h1>
+    <p class="section-subtitle">
+      Update live preparation and delivery statuses for all incoming tickets.
+    </p>
+  </div>
+
+  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+    <a href="/admin" class="btn btn-secondary">&larr; Back to Dashboard</a>
+  </div>
+</div>
+
+<!-- Filter Tabs -->
+<div class="menu-filter-bar" style="justify-content: flex-start; margin-bottom: 1.5rem;">
+  <a href="/admin/orders" class="filter-btn {{ 'active' if current_filter == 'all' else '' }}">All Orders</a>
+  <a href="/admin/orders?status_filter=Received" class="filter-btn {{ 'active' if current_filter == 'Received' else '' }}">Received</a>
+  <a href="/admin/orders?status_filter=Preparing" class="filter-btn {{ 'active' if current_filter == 'Preparing' else '' }}">Preparing</a>
+  <a href="/admin/orders?status_filter=Out+for+Delivery" class="filter-btn {{ 'active' if current_filter == 'Out for Delivery' else '' }}">Out for Delivery</a>
+  <a href="/admin/orders?status_filter=Delivered" class="filter-btn {{ 'active' if current_filter == 'Delivered' else '' }}">Delivered</a>
+</div>
+
+<div class="admin-card">
+  <div class="table-responsive">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Order #</th>
+          <th>Date & Time</th>
+          <th>Customer Info</th>
+          <th>Items Ordered</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Update Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ord in orders %}
+          <tr>
+            <td>
+              <a href="/orders/{{ ord.id }}" target="_blank" style="font-weight: 800; color: var(--primary);">
+                #{{ ord.order_number or ord.id }} &nearr;
+              </a>
+            </td>
+            <td>
+              <span style="font-size: 0.88rem;">{{ ord.created_at.strftime('%b %d, %Y') }}</span>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">{{ ord.created_at.strftime('%I:%M %p') }}</div>
+            </td>
+            <td>
+              <strong>{{ ord.customer_name }}</strong>
+              <div style="font-size: 0.82rem; color: var(--text-muted);">{{ ord.customer_email }}</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">📍 {{ ord.address[:30] }}...</div>
+            </td>
+            <td>
+              <div style="font-size: 0.85rem; max-width: 250px;">
+                {% for it in ord.items %}
+                  <div>&bull; {{ it.quantity }}x {{ it.menu_item.name if it.menu_item else 'Pizza' }} ({{ it.size }})</div>
+                {% endfor %}
+              </div>
+            </td>
+            <td>
+              <strong style="font-size: 1.05rem;">${{ '%.2f'|format(ord.total) }}</strong>
+              <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: {{ 'var(--secondary)' if ord.payment_status == 'paid' else '#D9480F' }};">
+                {{ ord.payment_method.upper() }} ({{ ord.payment_status }})
+              </div>
+            </td>
+            <td>
+              {% set st = ord.status %}
+              <span style="display: inline-block; font-size: 0.78rem; font-weight: 700; padding: 3px 10px; border-radius: var(--radius-full); 
+                {% if st == 'Delivered' %}background: var(--secondary-soft); color: var(--secondary);
+                {% elif st == 'Out for Delivery' %}background: #FFF4E6; color: #D9480F;
+                {% elif st == 'Preparing' %}background: #E7F5FF; color: #1971C2;
+                {% else %}background: var(--primary-soft); color: var(--primary);{% endif %}">
+                {{ ord.status }}
+              </span>
+            </td>
+            <td>
+              <form method="post" action="/admin/orders/{{ ord.id }}/status" style="display: flex; flex-direction: column; gap: 4px;">
+                <select name="status" class="form-control" style="font-size: 0.82rem; padding: 0.35rem 0.5rem;" onchange="this.form.submit()">
+                  <option value="Received" {% if ord.status == 'Received' %}selected{% endif %}>Received</option>
+                  <option value="Preparing" {% if ord.status == 'Preparing' %}selected{% endif %}>Preparing</option>
+                  <option value="Out for Delivery" {% if ord.status == 'Out for Delivery' %}selected{% endif %}>Out for Delivery</option>
+                  <option value="Delivered" {% if ord.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                  <option value="Cancelled" {% if ord.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+              No orders found for this status.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
