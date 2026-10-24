@@ -209,3 +209,21 @@ To transition from SQLite to PostgreSQL:
    DATABASE_URL="postgresql://username:password@localhost:5432/pizzadb"
    ```
 3. Restart the server. SQLAlchemy will automatically create and manage all schema tables in PostgreSQL without any code changes.
+
+---
+
+## 🚀 Vercel Deployment
+
+This project includes zero-config serverless deployment support for Vercel:
+- **Serverless Entrypoint**: [`api/index.py`](file:///d:/pizza-site/api/index.py)
+- **Deployment Config**: [`vercel.json`](file:///d:/pizza-site/vercel.json) bundles HTML templates, static CSS/JS assets, and seeds the SQLite database to `/tmp/pizzadb.db` for ephemeral serverless write support.
+
+To deploy or redeploy:
+```bash
+git push origin main
+```
+Or with Vercel CLI:
+```bash
+vercel --prod
+```
+
