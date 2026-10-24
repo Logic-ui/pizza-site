@@ -5,11 +5,15 @@
 {% block content %}
 <!-- ==================== HERO SECTION ==================== -->
 <section class="hero-section">
+  <div class="hero-glow-sphere hero-glow-1"></div>
+  <div class="hero-glow-sphere hero-glow-2"></div>
+
   <div class="hero-grid">
-    <!-- Hero Copy & Call To Action -->
+    <!-- Hero Content -->
     <div class="hero-content">
       <div class="hero-badge">
-        <span>🔥</span> Authentic Italian Wood-Fired Pizza
+        <span class="badge-fire-pulse">🔥</span>
+        <span>Authentic Wood-Fired Neapolitan Pizza</span>
       </div>
       
       <h1 class="hero-title">
@@ -18,52 +22,57 @@
       </h1>
       
       <p class="hero-description">
-        Experience genuine Neapolitan flavors handcrafted with 48-hour slow-fermented dough, 
-        sweet San Marzano tomatoes, and creamy Fior di Latte, blistered at 900°F in our stone oven.
+        Experience genuine artisanal flavors handcrafted with 48-hour slow-fermented sourdough, 
+        San Marzano D.O.P. tomatoes, and creamy Fior di Latte, blistered at 900°F in our stone oven.
       </p>
 
       <div class="hero-cta-group">
-        <a href="#menu" class="btn btn-primary btn-lg">
-          <span>🍕</span> Explore Menu
+        <a href="#menu" class="btn btn-primary btn-lg hero-cta-btn">
+          <span>🍕</span> Explore Menu & Customize
         </a>
         <a href="/cart" class="btn btn-secondary btn-lg">
-          <span>🛒</span> View Cart
+          <span>🛒</span> View Cart (<span class="hero-cart-counter">0</span>)
         </a>
       </div>
 
       <div class="hero-stats">
         <div class="stat-item">
-          <span class="stat-number">900°F</span>
-          <span class="stat-label">Stone Oven Heat</span>
+          <div class="stat-number">900°F</div>
+          <div class="stat-label">Stone Oven Heat</div>
         </div>
+        <div class="stat-divider"></div>
         <div class="stat-item">
-          <span class="stat-number">48 Hrs</span>
-          <span class="stat-label">Slow Fermentation</span>
+          <div class="stat-number">48 Hrs</div>
+          <div class="stat-label">Slow Fermentation</div>
         </div>
+        <div class="stat-divider"></div>
         <div class="stat-item">
-          <span class="stat-number">4.9 ★</span>
-          <span class="stat-label">Over 2,400 Reviews</span>
+          <div class="stat-number">4.9 ★</div>
+          <div class="stat-label">Over 2,400 Reviews</div>
         </div>
       </div>
     </div>
 
-    <!-- Hero Visual Card -->
+    <!-- Hero Visual Showcase -->
     <div class="hero-visual-wrapper">
       <div class="hero-visual-card">
         <img
           src="/static/images/hero_pizza.jpg"
           alt="Artisanal wood-fired pizza fresh from the stone oven"
+          class="hero-main-img"
           loading="eager"
         />
         <div class="hero-floating-badge">
+          <div class="floating-badge-icon">🔥</div>
           <div class="floating-badge-info">
             <h4>Fresh From The Oven</h4>
-            <p>Signature Margherita D.O.C.</p>
+            <p>Signature Margherita D.O.C. &middot; Stone-Baked</p>
           </div>
           <div class="rating-pill">
             <span>★</span> 4.9
           </div>
         </div>
+        <div class="hero-ambient-tag">Wood-Fired Daily</div>
       </div>
     </div>
   </div>
@@ -75,7 +84,7 @@
     <div class="feature-icon-wrapper">🪵</div>
     <div class="feature-info">
       <h4>Oak Wood-Fired</h4>
-      <p>Baked at 900°F for an airy, charred blister crust</p>
+      <p>Blistered at 900°F for an airy, charred leopard-spot crust</p>
     </div>
   </div>
 
@@ -83,7 +92,7 @@
     <div class="feature-icon-wrapper">🌾</div>
     <div class="feature-info">
       <h4>48-Hour Fermented</h4>
-      <p>Light, digestible sourdough with crisp texture</p>
+      <p>Light, digestible sourdough with crisp yet tender texture</p>
     </div>
   </div>
 
@@ -91,7 +100,7 @@
     <div class="feature-icon-wrapper">🍅</div>
     <div class="feature-info">
       <h4>San Marzano D.O.P.</h4>
-      <p>Authentic sweet Italian tomatoes & fresh basil</p>
+      <p>Sun-ripened Italian plum tomatoes & fresh aromatic basil</p>
     </div>
   </div>
 
@@ -99,7 +108,7 @@
     <div class="feature-icon-wrapper">⚡</div>
     <div class="feature-info">
       <h4>Express Delivery</h4>
-      <p>Delivered piping hot directly to your doorstep</p>
+      <p>Insulated thermal boxes keep your pizza piping hot & crisp</p>
     </div>
   </div>
 </section>
@@ -108,34 +117,55 @@
 <section class="menu-section" id="menu">
   <div class="section-header">
     <div class="section-tag">
-      <span>🍕</span> Handcrafted Selection
+      <span>🍕</span> Handcrafted Menu
     </div>
-    <h2 class="section-title">Explore Our Full Menu</h2>
+    <h2 class="section-title">Explore Our Artisan Selection</h2>
     <p class="section-subtitle">
-      Pizzas, artisan sides, refreshing drinks, and value combo deals.
+      Customizable stone-baked pizzas, freshly baked sides, Italian sodas, and combo deals.
     </p>
 
-    <!-- Search Bar -->
-    <div style="max-width: 440px; margin: 1.5rem auto 0; position: relative;">
-      <input
-        type="text"
-        id="menu-search-input"
-        class="form-control"
-        placeholder="🔍 Search pizzas, toppings, ingredients..."
-        style="padding-left: 1.25rem; border-radius: var(--radius-full); box-shadow: var(--shadow-sm);"
-        onkeyup="filterMenuItems()"
-      />
+    <!-- Modern Search & Filter Bar -->
+    <div class="menu-search-wrapper">
+      <div class="search-input-group">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          id="menu-search-input"
+          class="search-input"
+          placeholder="Search pizzas, ingredients, toppings, or sides..."
+          onkeyup="filterMenuItems()"
+        />
+        <button
+          type="button"
+          id="search-clear-btn"
+          class="search-clear-btn"
+          onclick="clearSearchInput()"
+          aria-label="Clear search"
+          style="display: none;"
+        >
+          &times;
+        </button>
+      </div>
+      <div id="search-results-count" class="search-counter-badge" style="display: none;"></div>
     </div>
   </div>
 
   <!-- Category Filter Tabs -->
   <div class="menu-filter-bar">
     <button class="filter-btn active" data-category="all" onclick="selectCategory('all', this)">
-      All Items
+      <span>All Items</span>
+      <span class="filter-count">({{ items|length }})</span>
     </button>
     {% for cat in categories %}
+      {% set cat_items = [] %}
+      {% for item in items %}
+        {% if item.category and item.category.slug == cat.slug %}
+          {% set _ = cat_items.append(item) %}
+        {% endif %}
+      {% endfor %}
       <button class="filter-btn" data-category="{{ cat.slug }}" onclick="selectCategory('{{ cat.slug }}', this)">
-        {{ cat.name }}
+        <span>{{ cat.name }}</span>
+        <span class="filter-count">({{ cat_items|length }})</span>
       </button>
     {% endfor %}
   </div>
@@ -144,30 +174,42 @@
   <div class="pizza-grid" id="menu-items-grid">
     {% for it in items %}
       {% set cat_slug = it.category.slug if it.category else 'pizzas' %}
+      {% set is_pizza = (cat_slug == 'pizzas' or 'pizza' in (it.name|lower) or (it.category and 'pizza' in (it.category.name|lower))) %}
       <article
-        class="pizza-card menu-card-item"
+        class="pizza-card menu-card-item {% if is_pizza %}pizza-customizable-card{% endif %}"
         data-id="{{ it.id }}"
         data-category="{{ cat_slug }}"
         data-name="{{ it.name|lower }}"
         data-desc="{{ (it.description or '')|lower }}"
         data-base-price="{{ it.base_price }}"
-        data-is-pizza="{{ 'true' if cat_slug == 'pizzas' else 'false' }}"
+        data-is-pizza="{{ 'true' if is_pizza else 'false' }}"
       >
-        <div class="pizza-card-img-wrap">
+        <div
+          class="pizza-card-img-wrap"
+          {% if is_pizza %}
+            onclick="openCustomizationModal({{ it.id }}, '{{ it.name|replace('\'', '\\\'') }}', {{ it.base_price }}, '{{ it.image_url() }}', '{{ it.description|replace('\'', '\\\'') }}')"
+            style="cursor: pointer;"
+            title="Click to customize {{ it.name }}"
+          {% endif %}
+        >
           <img
             src="{{ it.image_url() }}"
             alt="{{ it.name }}"
             loading="lazy"
+            class="card-food-img"
           />
 
           <!-- Badges -->
-          <div style="position: absolute; top: 1rem; left: 1rem; display: flex; flex-direction: column; gap: 4px;">
+          <div class="pizza-card-badges">
+            {% if is_pizza %}
+              <span class="pizza-tag tag-customizable">✨ Customizable</span>
+            {% endif %}
             {% if it.is_vegetarian %}
-              <span class="pizza-tag" style="color: var(--secondary);">🌿 Vegetarian</span>
+              <span class="pizza-tag tag-vegetarian">🌿 Veg</span>
             {% elif it.is_spicy %}
-              <span class="pizza-tag" style="color: #FA5252;">🌶️ Spicy</span>
+              <span class="pizza-tag tag-spicy">🌶️ Spicy</span>
             {% elif it.is_featured %}
-              <span class="pizza-tag" style="color: var(--primary);">🔥 Chef's Pick</span>
+              <span class="pizza-tag tag-featured">🔥 Chef's Pick</span>
             {% endif %}
           </div>
 
@@ -175,16 +217,27 @@
         </div>
 
         <div class="pizza-card-body">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <h3 class="pizza-card-title">{{ it.name }}</h3>
+          <div class="pizza-card-header-row">
+            <h3
+              class="pizza-card-title"
+              {% if is_pizza %}
+                onclick="openCustomizationModal({{ it.id }}, '{{ it.name|replace('\'', '\\\'') }}', {{ it.base_price }}, '{{ it.image_url() }}', '{{ it.description|replace('\'', '\\\'') }}')"
+                style="cursor: pointer;"
+                title="Click to customize {{ it.name }}"
+              {% endif %}
+            >
+              {{ it.name }}
+            </h3>
+            
             <!-- Rating Star Badge -->
             <button
               type="button"
+              class="rating-interactive-btn"
               onclick="openReviewModal({{ it.id }}, '{{ it.name|replace('\'', '\\\'') }}')"
-              style="background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 3px; font-size: 0.85rem; font-weight: 700; color: #F59F00;"
-              title="View & add reviews"
+              title="View customer reviews or rate this item"
             >
-              <span>★</span> {{ it.average_rating() }}
+              <span class="star-icon">★</span>
+              <span class="star-score">{{ it.average_rating() }}</span>
             </button>
           </div>
 
@@ -193,25 +246,28 @@
           </p>
 
           <div class="pizza-card-footer">
-            <div class="pizza-card-price">
-              ${{ '%.2f'|format(it.base_price) }}
+            <div class="pizza-card-price-block">
+              <span class="price-label">Starts at</span>
+              <div class="pizza-card-price">${{ '%.2f'|format(it.base_price) }}</div>
             </div>
 
-            {% if cat_slug == 'pizzas' %}
-              <!-- Pizza Customization Button -->
+            {% if is_pizza %}
+              <!-- Pizza Customization Button: STRICTLY SAYS "Customize" -->
               <button
                 type="button"
-                class="btn btn-add-cart"
+                class="btn btn-primary btn-customize"
                 onclick="openCustomizationModal({{ it.id }}, '{{ it.name|replace('\'', '\\\'') }}', {{ it.base_price }}, '{{ it.image_url() }}', '{{ it.description|replace('\'', '\\\'') }}')"
                 aria-label="Customize {{ it.name }}"
+                id="customize-btn-{{ it.id }}"
               >
-                <span>⚙️</span> Customize
+                <span class="btn-icon">🍕</span>
+                <span class="btn-text">Customize</span>
               </button>
             {% else %}
-              <!-- Direct Add Button for Sides/Drinks -->
+              <!-- Direct Add Button for Sides / Drinks / Deals -->
               <button
                 type="button"
-                class="btn btn-add-cart"
+                class="btn btn-secondary btn-quick-add"
                 onclick="addToCart({{ it.id }}, '{{ it.name|replace('\'', '\\\'') }}', {{ it.base_price }})"
                 aria-label="Add {{ it.name }} to cart"
               >
@@ -227,46 +283,136 @@
       </article>
     {% endfor %}
   </div>
+
+  <!-- Empty Search Results State -->
+  <div id="no-menu-results" class="no-results-card" style="display: none;">
+    <div class="no-results-icon">🔍</div>
+    <h3>No matching items found</h3>
+    <p>Try searching for a different pizza name or topping, or clear your search.</p>
+    <button type="button" class="btn btn-secondary btn-sm" onclick="clearSearchInput()">
+      Reset Filter & Search
+    </button>
+  </div>
 </section>
 
 <!-- ==================== PIZZA CUSTOMIZATION MODAL ==================== -->
-<div id="custom-modal-backdrop" class="mobile-nav-backdrop" onclick="closeCustomizationModal()"></div>
-<div id="custom-modal" class="custom-modal-dialog" style="display: none;">
-  <div class="custom-modal-content">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
-      <div>
-        <span class="section-tag" style="margin-bottom: 0.25rem;">Custom Artisan Pizza</span>
-        <h2 id="modal-pizza-name" style="font-size: 1.5rem; margin: 0;">Customize Pizza</h2>
+<div id="custom-modal-backdrop" class="modal-backdrop-blur" onclick="closeCustomizationModal()"></div>
+<div id="custom-modal" class="customizer-dialog" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modal-pizza-name">
+  <div class="customizer-modal-content">
+    
+    <!-- Modal Header -->
+    <div class="customizer-modal-header">
+      <div class="customizer-header-info">
+        <span class="customizer-tag">
+          <span>🍕</span> Artisanal Pizza Customizer
+        </span>
+        <h2 id="modal-pizza-name" class="customizer-title">Customize Pizza</h2>
+        <p id="modal-pizza-desc" class="customizer-desc">Select your preferred crust, size, and fresh gourmet toppings.</p>
       </div>
-      <button type="button" class="close-drawer-btn" onclick="closeCustomizationModal()">&times;</button>
+      <button
+        type="button"
+        class="customizer-close-btn"
+        onclick="closeCustomizationModal()"
+        aria-label="Close customizer"
+      >
+        &times;
+      </button>
     </div>
 
-    <div style="max-height: 70vh; overflow-y: auto; padding-right: 0.5rem;">
-      <!-- Size Option -->
-      <div style="margin-bottom: 1.5rem;">
-        <label class="form-label">1. Choose Size</label>
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;">
-          <label class="size-radio-label">
-            <input type="radio" name="modal_size" value="Small" data-mult="0.85" onchange="recalculateModalPrice()" />
-            <span>Small (10")</span>
+    <!-- Modal Scrollable Body -->
+    <div class="customizer-modal-body">
+      
+      <!-- STEP 1: SIZE SELECTION -->
+      <div class="customizer-section">
+        <div class="section-step-header">
+          <span class="step-num">1</span>
+          <div>
+            <h4 class="step-title">Choose Your Pizza Size</h4>
+            <span class="step-subtitle">Hand-stretched to order</span>
+          </div>
+        </div>
+
+        <div class="size-options-grid">
+          <!-- Small -->
+          <label class="size-card-option">
+            <input
+              type="radio"
+              name="modal_size"
+              value="Small"
+              data-mult="0.85"
+              onchange="recalculateModalPrice()"
+            />
+            <div class="size-card-inner">
+              <div class="size-circle-icon size-s">
+                <span>10"</span>
+              </div>
+              <div class="size-card-text">
+                <strong>Small (10")</strong>
+                <span class="size-serves">Serves 1 person</span>
+              </div>
+              <span class="size-ratio-badge">0.85x</span>
+            </div>
           </label>
-          <label class="size-radio-label">
-            <input type="radio" name="modal_size" value="Regular" data-mult="1.0" checked onchange="recalculateModalPrice()" />
-            <span>Regular (12")</span>
+
+          <!-- Regular (Default) -->
+          <label class="size-card-option">
+            <input
+              type="radio"
+              name="modal_size"
+              value="Regular"
+              data-mult="1.0"
+              checked
+              onchange="recalculateModalPrice()"
+            />
+            <div class="size-card-inner">
+              <div class="size-circle-icon size-m">
+                <span>12"</span>
+              </div>
+              <div class="size-card-text">
+                <div class="popular-ribbon">Most Popular</div>
+                <strong>Regular (12")</strong>
+                <span class="size-serves">Serves 2-3 people</span>
+              </div>
+              <span class="size-ratio-badge">Standard</span>
+            </div>
           </label>
-          <label class="size-radio-label">
-            <input type="radio" name="modal_size" value="Large" data-mult="1.35" onchange="recalculateModalPrice()" />
-            <span>Large (14")</span>
+
+          <!-- Large -->
+          <label class="size-card-option">
+            <input
+              type="radio"
+              name="modal_size"
+              value="Large"
+              data-mult="1.35"
+              onchange="recalculateModalPrice()"
+            />
+            <div class="size-card-inner">
+              <div class="size-circle-icon size-l">
+                <span>14"</span>
+              </div>
+              <div class="size-card-text">
+                <strong>Large (14")</strong>
+                <span class="size-serves">Serves 3-4 people</span>
+              </div>
+              <span class="size-ratio-badge">1.35x</span>
+            </div>
           </label>
         </div>
       </div>
 
-      <!-- Crust Option -->
-      <div style="margin-bottom: 1.5rem;">
-        <label class="form-label">2. Choose Artisan Crust</label>
-        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+      <!-- STEP 2: ARTISAN CRUST -->
+      <div class="customizer-section">
+        <div class="section-step-header">
+          <span class="step-num">2</span>
+          <div>
+            <h4 class="step-title">Choose Artisan Crust</h4>
+            <span class="step-subtitle">All dough fermented for 48 hours</span>
+          </div>
+        </div>
+
+        <div class="crust-options-list">
           {% for cr in crusts %}
-            <label class="crust-radio-label">
+            <label class="crust-card-option">
               <input
                 type="radio"
                 name="modal_crust"
@@ -276,24 +422,39 @@
                 {% if loop.first %}checked{% endif %}
                 onchange="recalculateModalPrice()"
               />
-              <div style="flex: 1;">
-                <strong>{{ cr.name }}</strong>
-                <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">{{ cr.description }}</span>
+              <div class="crust-card-inner">
+                <div class="crust-radio-indicator"></div>
+                <div class="crust-info">
+                  <div class="crust-name-row">
+                    <strong>{{ cr.name }}</strong>
+                    {% if loop.first %}
+                      <span class="badge-signature">Traditional</span>
+                    {% endif %}
+                  </div>
+                  <span class="crust-desc">{{ cr.description }}</span>
+                </div>
+                <div class="crust-price-tag">
+                  {{ 'FREE' if cr.price_modifier == 0 else '+$' ~ '%.2f'|format(cr.price_modifier) }}
+                </div>
               </div>
-              <span style="font-weight: 700; color: var(--text-main);">
-                {{ 'FREE' if cr.price_modifier == 0 else '+$' ~ '%.2f'|format(cr.price_modifier) }}
-              </span>
             </label>
           {% endfor %}
         </div>
       </div>
 
-      <!-- Extra Toppings -->
-      <div style="margin-bottom: 1.5rem;">
-        <label class="form-label">3. Add Extra Gourmet Toppings</label>
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.5rem;">
+      <!-- STEP 3: EXTRA GOURMET TOPPINGS -->
+      <div class="customizer-section">
+        <div class="section-step-header">
+          <span class="step-num">3</span>
+          <div>
+            <h4 class="step-title">Add Extra Gourmet Toppings</h4>
+            <span class="step-subtitle">Customize and elevate your pizza with fresh ingredients</span>
+          </div>
+        </div>
+
+        <div class="toppings-chips-grid">
           {% for tp in toppings %}
-            <label class="topping-checkbox-label">
+            <label class="topping-chip">
               <input
                 type="checkbox"
                 class="modal-topping-checkbox"
@@ -302,102 +463,125 @@
                 data-price="{{ tp.price }}"
                 onchange="recalculateModalPrice()"
               />
-              <span style="flex: 1; font-size: 0.88rem;">{{ tp.name }}</span>
-              <span style="font-weight: 700; font-size: 0.85rem; color: var(--primary);">+${{ '%.2f'|format(tp.price) }}</span>
+              <div class="topping-chip-inner">
+                <div class="topping-check-box">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+                <span class="topping-name">{{ tp.name }}</span>
+                <span class="topping-price">+${{ '%.2f'|format(tp.price) }}</span>
+              </div>
             </label>
           {% endfor %}
         </div>
       </div>
-    </div>
 
-    <!-- Modal Footer with Real-time Calculated Total -->
-    <div style="margin-top: 1.25rem; padding-top: 1.25rem; border-top: 2px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-      <div>
-        <span style="font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Total Price:</span>
-        <div id="modal-calculated-price" style="font-size: 1.75rem; font-weight: 800; color: var(--primary);">$0.00</div>
+      <!-- STEP 4: SPECIAL INSTRUCTIONS -->
+      <div class="customizer-section" style="border-bottom: none; margin-bottom: 0;">
+        <div class="section-step-header">
+          <span class="step-num">4</span>
+          <div>
+            <h4 class="step-title">Special Kitchen Instructions (Optional)</h4>
+            <span class="step-subtitle">Let our pizzaiolo know your preferences</span>
+          </div>
+        </div>
+        <input
+          type="text"
+          id="modal-special-instructions"
+          class="form-control"
+          placeholder="e.g. Well-done crust, easy on the cheese, basil on the side..."
+          maxlength="150"
+        />
       </div>
 
-      <button type="button" class="btn btn-primary btn-lg" onclick="addCustomizedPizzaToCart()">
-        <span>🛒</span> Add to Cart
+    </div>
+
+    <!-- Sticky Modal Footer -->
+    <div class="customizer-modal-footer">
+      <div class="customizer-footer-left">
+        <div class="customizer-price-summary">
+          <span class="summary-label">Total Customized Price</span>
+          <div class="summary-price-wrap">
+            <span id="modal-calculated-price" class="summary-price-display">$0.00</span>
+            <span id="modal-summary-pill" class="summary-details-pill">Regular 12"</span>
+          </div>
+        </div>
+
+        <!-- Quantity Stepper inside modal -->
+        <div class="modal-qty-stepper">
+          <button type="button" class="modal-qty-btn" onclick="adjustModalQty(-1)" aria-label="Decrease quantity">&minus;</button>
+          <span id="modal-qty-val" class="modal-qty-val">1</span>
+          <button type="button" class="modal-qty-btn" onclick="adjustModalQty(1)" aria-label="Increase quantity">&plus;</button>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        id="modal-add-to-cart-btn"
+        class="btn btn-primary btn-lg customizer-cta-btn"
+        onclick="addCustomizedPizzaToCart()"
+      >
+        <span>🛒</span>
+        <span id="modal-cta-text">Add to Cart</span>
       </button>
     </div>
+
   </div>
 </div>
 
 <!-- ==================== ITEM REVIEWS MODAL ==================== -->
-<div id="review-modal-backdrop" class="mobile-nav-backdrop" onclick="closeReviewModal()"></div>
-<div id="review-modal" class="custom-modal-dialog" style="display: none;">
-  <div class="custom-modal-content" style="max-width: 500px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
-      <h3 id="review-modal-item-name" style="margin: 0; font-size: 1.25rem;">Item Reviews</h3>
-      <button type="button" class="close-drawer-btn" onclick="closeReviewModal()">&times;</button>
+<div id="review-modal-backdrop" class="modal-backdrop-blur" onclick="closeReviewModal()"></div>
+<div id="review-modal" class="customizer-dialog" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="review-modal-item-name">
+  <div class="customizer-modal-content review-modal-content">
+    <div class="customizer-modal-header">
+      <div>
+        <span class="customizer-tag"><span>⭐</span> Customer Feedback</span>
+        <h3 id="review-modal-item-name" class="customizer-title" style="font-size: 1.4rem;">Item Reviews</h3>
+      </div>
+      <button type="button" class="customizer-close-btn" onclick="closeReviewModal()">&times;</button>
     </div>
 
-    <div id="review-list-container" style="max-height: 250px; overflow-y: auto; margin-bottom: 1.25rem;">
-      <p style="color: var(--text-muted); font-size: 0.9rem;">Loading reviews...</p>
+    <div class="review-modal-body">
+      <!-- Existing Reviews List -->
+      <div id="review-list-container" class="review-list-scroll">
+        <p class="text-muted">Loading reviews...</p>
+      </div>
+
+      <!-- Write Review Form -->
+      <form id="review-form" onsubmit="submitReview(event)" class="review-form-card">
+        <input type="hidden" id="review-item-id" value="" />
+        <h4 class="review-form-title">Leave Your Rating & Review</h4>
+        
+        <div class="form-group">
+          <label class="form-label">Your Rating</label>
+          <div class="star-rating-select-wrap">
+            <select id="review-rating-select" class="form-control" required>
+              <option value="5">⭐⭐⭐⭐⭐ 5 - Exceptional Perfection</option>
+              <option value="4">⭐⭐⭐⭐ 4 - Very Delicious</option>
+              <option value="3">⭐⭐⭐ 3 - Good / Satisfying</option>
+              <option value="2">⭐⭐ 2 - Average</option>
+              <option value="1">⭐ 1 - Not for me</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Your Experience / Feedback</label>
+          <textarea
+            id="review-comment-input"
+            class="form-control"
+            placeholder="Tell us what you loved about the crust blister, toppings, sauce balance..."
+            rows="3"
+            required
+          ></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          <span>✍️</span> Submit Review
+        </button>
+      </form>
     </div>
-
-    <form id="review-form" onsubmit="submitReview(event)" style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
-      <input type="hidden" id="review-item-id" value="" />
-      <h4 style="font-size: 1rem; margin-bottom: 0.5rem;">Write a Review</h4>
-      
-      <div class="form-group">
-        <label class="form-label">Your Rating (1 to 5 Stars)</label>
-        <select id="review-rating-select" class="form-control" required>
-          <option value="5">⭐⭐⭐⭐⭐ 5 - Exceptional</option>
-          <option value="4">⭐⭐⭐⭐ 4 - Very Delicious</option>
-          <option value="3">⭐⭐⭐ 3 - Good</option>
-          <option value="2">⭐⭐ 2 - Average</option>
-          <option value="1">⭐ 1 - Not for me</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Your Feedback / Comments</label>
-        <textarea id="review-comment-input" class="form-control" placeholder="Tell us how you liked the crust, sauce, and toppings..." rows="3" required></textarea>
-      </div>
-
-      <button type="submit" class="btn btn-primary" style="width: 100%;">
-        Submit Review
-      </button>
-    </form>
   </div>
 </div>
-
-<style>
-  .custom-modal-dialog {
-    position: fixed;
-    inset: 0;
-    z-index: 2000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-  }
-  .custom-modal-content {
-    background: #fff;
-    border-radius: var(--radius-lg);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    width: 100%;
-    max-width: 640px;
-    padding: 2rem;
-    position: relative;
-    z-index: 2001;
-    animation: toastSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  .size-radio-label, .crust-radio-label, .topping-checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    padding: 0.75rem;
-    border: 1.5px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: var(--transition);
-  }
-  .size-radio-label:hover, .crust-radio-label:hover, .topping-checkbox-label:hover {
-    border-color: var(--primary);
-    background: var(--primary-soft);
-  }
-</style>
 {% endblock %}

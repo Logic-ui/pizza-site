@@ -138,7 +138,7 @@ def seed_database(db: Session):
                 description="Six freshly baked dough knots tossed in rich roasted garlic butter, fresh parsley, and grated aged Pecorino Romano.",
                 base_price=4.99,
                 category_id=side_cat.id,
-                image_filename="default_pizza.jpeg",
+                image_filename="garlic_knots.jpeg",
                 is_vegetarian=True,
                 is_featured=False,
                 is_available=True
@@ -160,7 +160,7 @@ def seed_database(db: Session):
                 description="Sparkling San Pellegrino natural blood orange soda, chilled to refreshing perfection.",
                 base_price=2.99,
                 category_id=drink_cat.id,
-                image_filename="default_pizza.jpeg",
+                image_filename="blood_orange_soda.jpeg",
                 is_vegetarian=True,
                 is_featured=False,
                 is_available=True

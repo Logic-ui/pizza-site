@@ -1,22 +1,26 @@
 /**
- * Pizza Shop - Enterprise Frontend JavaScript
- * Handles cart management, pizza customization, coupon discounts, order tracking,
- * real-time price calculation, reviews, drawer navigation, and form validation.
+ * CRUST & FLAME - ENTERPRISE PIZZERIA JAVASCRIPT
+ * Complete interactive suite: Pizza Customizer Modal, Real-time Pricing,
+ * Cart Management, Live Search, Mobile Drawer, Coupons, and Order Tracking.
  */
 
 document.addEventListener("DOMContentLoaded", () => {
-  // ---------------- Cart State Initialization ----------------
+  // ==========================================================================
+  // 1. CART STATE & INITIALIZATION
+  // ==========================================================================
   try {
     window.cart = JSON.parse(localStorage.getItem("cart") || "[]");
     if (!Array.isArray(window.cart)) window.cart = [];
   } catch (e) {
-    console.error("Error reading cart from localStorage:", e);
+    console.warn("Could not read cart from localStorage, initializing fresh:", e);
     window.cart = [];
   }
 
   window.appliedCoupon = null;
 
-  // ---------------- Toast Notifications ----------------
+  // ==========================================================================
+  // 2. TOAST NOTIFICATION SYSTEM
+  // ==========================================================================
   window.showToast = function (message, type = "info") {
     let container = document.getElementById("toast-container");
     if (!container) {
@@ -33,84 +37,91 @@ document.addEventListener("DOMContentLoaded", () => {
     toast.innerHTML = `
       <span class="toast-icon">${icon}</span>
       <span class="toast-message">${message}</span>
-      <button class="toast-close" aria-label="Close">&times;</button>
+      <button class="toast-close" aria-label="Close notification">&times;</button>
     `;
 
-    toast.querySelector(".toast-close").addEventListener("click", () => {
+    const closeToast = () => {
       toast.style.opacity = "0";
-      toast.style.transform = "translateY(10px)";
-      setTimeout(() => toast.remove(), 250);
-    });
+      toast.style.transform = "translateY(12px)";
+      setTimeout(() => toast.remove(), 260);
+    };
 
+    toast.querySelector(".toast-close").addEventListener("click", closeToast);
     container.appendChild(toast);
 
     setTimeout(() => {
-      if (toast.parentElement) {
-        toast.style.opacity = "0";
-        toast.style.transform = "translateY(10px)";
-        setTimeout(() => toast.remove(), 250);
-      }
-    }, 3500);
+      if (toast.parentElement) closeToast();
+    }, 3800);
   };
 
-  // ---------------- Update Cart Count Badge ----------------
+  // ==========================================================================
+  // 3. CART COUNTER & BOUNCE ANIMATION
+  // ==========================================================================
   window.updateCartCount = function () {
-    const el = document.getElementById("cart-count");
-    if (!el) return;
-    const totalQty = window.cart.reduce((s, i) => s + (Number(i.quantity) || 0), 0);
-    el.textContent = totalQty;
+    const totalQty = (window.cart || []).reduce(
+      (sum, item) => sum + (Number(item.quantity) || 0),
+      0
+    );
 
-    // Trigger bounce animation
-    el.classList.remove("bounce");
-    void el.offsetWidth; // Force reflow
-    el.classList.add("bounce");
-
-    const mobileCount = document.getElementById("mobile-cart-count");
-    if (mobileCount) mobileCount.textContent = totalQty;
-  };
-
-  // ---------------- Simple Add to Cart ----------------
-  window.addToCart = function (pizza_id, name, price) {
-    pizza_id = Number(pizza_id);
-    price = Number(price);
-
-    let item = window.cart.find((i) => Number(i.pizza_id) === pizza_id && !i.is_customized);
-    if (item) {
-      item.quantity = Number(item.quantity) + 1;
-    } else {
-      window.cart.push({
-        pizza_id,
-        name,
-        price,
-        quantity: 1,
-        size: "Regular",
-        toppings: []
-      });
+    // Update Header Badge
+    const headerBadge = document.getElementById("cart-count");
+    if (headerBadge) {
+      headerBadge.textContent = totalQty;
+      headerBadge.classList.remove("bounce");
+      void headerBadge.offsetWidth; // Force reflow
+      headerBadge.classList.add("bounce");
     }
 
-    localStorage.setItem("cart", JSON.stringify(window.cart));
-    updateCartCount();
-    showToast(`Added <strong>${name}</strong> to your cart!`, "success");
+    // Update Mobile Drawer Badge
+    const mobileBadge = document.getElementById("mobile-cart-count");
+    if (mobileBadge) mobileBadge.textContent = totalQty;
+
+    // Update Hero Button Counter
+    document.querySelectorAll(".hero-cart-counter").forEach((el) => {
+      el.textContent = totalQty;
+    });
   };
 
-  // ---------------- Customization Modal Logic ----------------
+  // ==========================================================================
+  // 4. PIZZA CUSTOMIZER MODAL ENGINE (HERO FEATURE)
+  // ==========================================================================
   window.activeModalPizza = null;
+  window.modalItemQty = 1;
 
   window.openCustomizationModal = function (id, name, basePrice, imageUrl, desc) {
-    window.activeModalPizza = { id, name, basePrice };
+    window.activeModalPizza = {
+      id: Number(id),
+      name: name || "Custom Pizza",
+      basePrice: Number(basePrice) || 0.0,
+      imageUrl: imageUrl || "",
+      desc: desc || ""
+    };
+    window.modalItemQty = 1;
 
     const modal = document.getElementById("custom-modal");
     const backdrop = document.getElementById("custom-modal-backdrop");
     const titleEl = document.getElementById("modal-pizza-name");
+    const descEl = document.getElementById("modal-pizza-desc");
+    const qtyVal = document.getElementById("modal-qty-val");
+    const instructionsInput = document.getElementById("modal-special-instructions");
 
-    if (titleEl) titleEl.textContent = "Customize: " + name;
+    if (titleEl) titleEl.textContent = `Customize: ${name}`;
+    if (descEl && desc) descEl.textContent = desc;
+    if (qtyVal) qtyVal.textContent = "1";
+    if (instructionsInput) instructionsInput.value = "";
 
     // Reset size to Regular
-    const regularSize = document.querySelector('input[name="modal_size"][value="Regular"]');
-    if (regularSize) regularSize.checked = true;
+    const regularRadio = document.querySelector('input[name="modal_size"][value="Regular"]');
+    if (regularRadio) regularRadio.checked = true;
+
+    // Reset crust to first option
+    const firstCrust = document.querySelector('input[name="modal_crust"]');
+    if (firstCrust) firstCrust.checked = true;
 
     // Uncheck extra toppings
-    document.querySelectorAll(".modal-topping-checkbox").forEach((cb) => (cb.checked = false));
+    document.querySelectorAll(".modal-topping-checkbox").forEach((cb) => {
+      cb.checked = false;
+    });
 
     recalculateModalPrice();
 
@@ -125,46 +136,79 @@ document.addEventListener("DOMContentLoaded", () => {
     if (modal) modal.style.display = "none";
     if (backdrop) backdrop.classList.remove("is-open");
     document.body.style.overflow = "";
+    window.activeModalPizza = null;
+  };
+
+  window.adjustModalQty = function (delta) {
+    window.modalItemQty = Math.max(1, Math.min(20, window.modalItemQty + delta));
+    const qtyVal = document.getElementById("modal-qty-val");
+    if (qtyVal) qtyVal.textContent = window.modalItemQty;
+    recalculateModalPrice();
   };
 
   window.recalculateModalPrice = function () {
-    if (!window.activeModalPizza) return;
+    if (!window.activeModalPizza) return 0.0;
 
-    let base = Number(window.activeModalPizza.basePrice);
+    const base = Number(window.activeModalPizza.basePrice);
 
-    // Size multiplier
-    const selectedSize = document.querySelector('input[name="modal_size"]:checked');
-    const sizeMultiplier = selectedSize ? Number(selectedSize.getAttribute("data-mult") || 1.0) : 1.0;
-    let price = base * sizeMultiplier;
+    // 1. Size multiplier
+    const selectedSizeRadio = document.querySelector('input[name="modal_size"]:checked');
+    const sizeMultiplier = selectedSizeRadio
+      ? Number(selectedSizeRadio.getAttribute("data-mult") || 1.0)
+      : 1.0;
+    const sizeName = selectedSizeRadio ? selectedSizeRadio.value : "Regular";
 
-    // Crust price modifier
+    let unitPrice = base * sizeMultiplier;
+
+    // 2. Crust modifier
     const selectedCrust = document.querySelector('input[name="modal_crust"]:checked');
+    let crustName = "Neapolitan Classic";
     if (selectedCrust) {
-      price += Number(selectedCrust.getAttribute("data-price") || 0.0);
+      unitPrice += Number(selectedCrust.getAttribute("data-price") || 0.0);
+      crustName = selectedCrust.getAttribute("data-name") || crustName;
     }
 
-    // Extra toppings
+    // 3. Extra toppings
+    let toppingsCount = 0;
     document.querySelectorAll(".modal-topping-checkbox:checked").forEach((cb) => {
-      price += Number(cb.getAttribute("data-price") || 0.0);
+      unitPrice += Number(cb.getAttribute("data-price") || 0.0);
+      toppingsCount++;
     });
 
-    const displayEl = document.getElementById("modal-calculated-price");
-    if (displayEl) {
-      displayEl.textContent = "$" + price.toFixed(2);
+    const qty = window.modalItemQty || 1;
+    const totalPrice = unitPrice * qty;
+
+    // Update Display Elements
+    const priceDisplay = document.getElementById("modal-calculated-price");
+    if (priceDisplay) {
+      priceDisplay.textContent = `$${totalPrice.toFixed(2)}`;
     }
-    return price;
+
+    const ctaText = document.getElementById("modal-cta-text");
+    if (ctaText) {
+      ctaText.textContent = `Add to Cart • $${totalPrice.toFixed(2)}`;
+    }
+
+    const summaryPill = document.getElementById("modal-summary-pill");
+    if (summaryPill) {
+      let topText = toppingsCount > 0 ? ` • +${toppingsCount} Topping${toppingsCount > 1 ? "s" : ""}` : "";
+      summaryPill.textContent = `${sizeName} • ${crustName}${topText}`;
+    }
+
+    return { unitPrice, totalPrice };
   };
 
   window.addCustomizedPizzaToCart = function () {
     if (!window.activeModalPizza) return;
 
-    const finalPrice = recalculateModalPrice();
-    const sizeEl = document.querySelector('input[name="modal_size"]:checked');
-    const size = sizeEl ? sizeEl.value : "Regular";
+    const { unitPrice } = recalculateModalPrice();
 
-    const crustEl = document.querySelector('input[name="modal_crust"]:checked');
-    const crust_id = crustEl ? Number(crustEl.value) : null;
-    const crust_name = crustEl ? crustEl.getAttribute("data-name") : null;
+    const sizeRadio = document.querySelector('input[name="modal_size"]:checked');
+    const size = sizeRadio ? sizeRadio.value : "Regular";
+
+    const crustRadio = document.querySelector('input[name="modal_crust"]:checked');
+    const crust_id = crustRadio ? Number(crustRadio.value) : null;
+    const crust_name = crustRadio ? crustRadio.getAttribute("data-name") : null;
 
     const toppings = [];
     document.querySelectorAll(".modal-topping-checkbox:checked").forEach((cb) => {
@@ -175,25 +219,67 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
+    const instructionsInput = document.getElementById("modal-special-instructions");
+    const special_instructions = instructionsInput ? instructionsInput.value.trim() : "";
+
+    const quantity = window.modalItemQty || 1;
+
     window.cart.push({
       pizza_id: window.activeModalPizza.id,
       name: window.activeModalPizza.name,
-      price: finalPrice,
-      quantity: 1,
-      size,
-      crust_id,
-      crust_name,
-      toppings,
+      price: Math.round(unitPrice * 100) / 100,
+      quantity: quantity,
+      size: size,
+      crust_id: crust_id,
+      crust_name: crust_name,
+      toppings: toppings,
+      special_instructions: special_instructions,
       is_customized: true
     });
 
     localStorage.setItem("cart", JSON.stringify(window.cart));
     updateCartCount();
     closeCustomizationModal();
-    showToast(`Added custom <strong>${window.activeModalPizza.name}</strong> to cart!`, "success");
+
+    showToast(
+      `Added custom <strong>${window.activeModalPizza.name}</strong> (${size}) to cart!`,
+      "success"
+    );
   };
 
-  // ---------------- Change Quantity in Cart ----------------
+  // ==========================================================================
+  // 5. DIRECT ADD TO CART (FOR SIDES & DRINKS)
+  // ==========================================================================
+  window.addToCart = function (item_id, name, price) {
+    item_id = Number(item_id);
+    price = Number(price);
+
+    let existingItem = window.cart.find(
+      (i) => Number(i.pizza_id) === item_id && !i.is_customized
+    );
+
+    if (existingItem) {
+      existingItem.quantity = Number(existingItem.quantity) + 1;
+    } else {
+      window.cart.push({
+        pizza_id: item_id,
+        name: name,
+        price: price,
+        quantity: 1,
+        size: "Regular",
+        toppings: [],
+        is_customized: false
+      });
+    }
+
+    localStorage.setItem("cart", JSON.stringify(window.cart));
+    updateCartCount();
+    showToast(`Added <strong>${name}</strong> to your cart!`, "success");
+  };
+
+  // ==========================================================================
+  // 6. CART MANAGEMENT & CHECKOUT LOGIC
+  // ==========================================================================
   window.changeQuantity = function (index, delta) {
     if (!window.cart[index]) return;
 
@@ -208,7 +294,6 @@ document.addEventListener("DOMContentLoaded", () => {
     updateCartCount();
   };
 
-  // ---------------- Remove from Cart ----------------
   window.removeFromCart = function (index) {
     const itemToRemove = window.cart[index];
     window.cart.splice(index, 1);
@@ -220,7 +305,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // ---------------- Render Cart Page ----------------
   window.renderCart = function () {
     const tbody = document.getElementById("cart-items");
     const emptyState = document.getElementById("cart-empty-state");
@@ -249,26 +333,29 @@ document.addEventListener("DOMContentLoaded", () => {
     let subtotal = 0;
 
     window.cart.forEach((item, index) => {
-      const lineTotal = item.price * item.quantity;
+      const lineTotal = Number(item.price) * Number(item.quantity);
       subtotal += lineTotal;
 
-      let customDetails = "";
+      let customTags = "";
       if (item.size && item.size !== "Regular") {
-        customDetails += `<span style="font-size: 0.8rem; color: var(--text-muted);">${item.size}</span> `;
+        customTags += `<span class="cart-custom-tag">${item.size} (Size)</span>`;
       }
       if (item.crust_name) {
-        customDetails += `<span style="font-size: 0.8rem; color: var(--text-muted);">&bull; ${item.crust_name}</span> `;
+        customTags += `<span class="cart-custom-tag">${item.crust_name}</span>`;
       }
       if (item.toppings && item.toppings.length > 0) {
         const topNames = item.toppings.map((t) => t.topping_name).join(", ");
-        customDetails += `<div style="font-size: 0.78rem; color: var(--text-muted);">+ ${topNames}</div>`;
+        customTags += `<div style="margin-top: 4px;"><span class="cart-custom-tag">+ ${topNames}</span></div>`;
+      }
+      if (item.special_instructions) {
+        customTags += `<div style="font-size: 0.76rem; color: var(--text-light); font-style: italic; margin-top: 2px;">Note: "${item.special_instructions}"</div>`;
       }
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>
           <div class="cart-item-title">${item.name}</div>
-          ${customDetails}
+          ${customTags}
         </td>
         <td>
           <div class="cart-qty-control">
@@ -280,7 +367,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>$${Number(item.price).toFixed(2)}</td>
         <td><strong>$${lineTotal.toFixed(2)}</strong></td>
         <td style="text-align: right;">
-          <button type="button" class="cart-remove-btn" onclick="removeFromCart(${index})" title="Remove item">
+          <button type="button" class="cart-remove-btn" onclick="removeFromCart(${index})" title="Remove item from cart">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="3 6 5 6 21 6"></polyline>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -295,7 +382,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (subtotalEl) subtotalEl.textContent = subtotal.toFixed(2);
 
-    // Calculate coupon discount
+    // Apply Coupon Discount Calculation
     let discount = 0;
     if (window.appliedCoupon) {
       if (window.appliedCoupon.discount_type === "percent") {
@@ -316,6 +403,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const tax = Math.round(taxableAmount * 0.08 * 100) / 100;
     if (taxEl) taxEl.textContent = tax.toFixed(2);
 
+    // Free delivery on orders $50+
     const deliveryFee = subtotal >= 50.0 ? 0.0 : 3.5;
     if (deliveryDisplay) {
       deliveryDisplay.textContent = deliveryFee === 0.0 ? "FREE" : "$3.50";
@@ -326,7 +414,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (totalEl) totalEl.textContent = grandTotal.toFixed(2);
   };
 
-  // ---------------- Coupon Code Application ----------------
+  // ==========================================================================
+  // 7. COUPON APPLICATION
+  // ==========================================================================
   window.applyCouponCode = async function () {
     const input = document.getElementById("coupon-input");
     const msgEl = document.getElementById("coupon-message");
@@ -335,7 +425,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!input || !input.value.trim()) return;
     const code = input.value.trim().toUpperCase();
 
-    const subtotal = window.cart.reduce((s, i) => s + i.price * i.quantity, 0);
+    const subtotal = (window.cart || []).reduce(
+      (sum, i) => sum + Number(i.price) * Number(i.quantity),
+      0
+    );
 
     const formData = new FormData();
     formData.append("code", code);
@@ -356,6 +449,7 @@ document.addEventListener("DOMContentLoaded", () => {
           msgEl.textContent = `✓ ${data.message}`;
         }
         renderCart();
+        showToast(`Coupon <strong>${data.code}</strong> applied!`, "success");
       } else {
         window.appliedCoupon = null;
         if (hiddenCode) hiddenCode.value = "";
@@ -374,37 +468,114 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // ---------------- Menu Filtering & Live Search ----------------
+  // ==========================================================================
+  // 8. LIVE SEARCH & CATEGORY FILTERING
+  // ==========================================================================
   window.selectCategory = function (slug, btn) {
     document.querySelectorAll(".filter-btn").forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     filterMenuItems();
   };
 
+  window.clearSearchInput = function () {
+    const searchInput = document.getElementById("menu-search-input");
+    if (searchInput) searchInput.value = "";
+    const clearBtn = document.getElementById("search-clear-btn");
+    if (clearBtn) clearBtn.style.display = "none";
+
+    // Reset to "All Items" tab
+    const allTab = document.querySelector('.filter-btn[data-category="all"]');
+    if (allTab) {
+      document.querySelectorAll(".filter-btn").forEach((b) => b.classList.remove("active"));
+      allTab.classList.add("active");
+    }
+
+    filterMenuItems();
+  };
+
   window.filterMenuItems = function () {
     const searchInput = document.getElementById("menu-search-input");
     const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
+    const clearBtn = document.getElementById("search-clear-btn");
+    const resultsCountEl = document.getElementById("search-results-count");
+    const noResultsEl = document.getElementById("no-menu-results");
+
+    if (clearBtn) {
+      clearBtn.style.display = query.length > 0 ? "flex" : "none";
+    }
 
     const activeFilterBtn = document.querySelector(".filter-btn.active");
-    const selectedCategory = activeFilterBtn ? activeFilterBtn.getAttribute("data-category") : "all";
+    const selectedCategory = activeFilterBtn
+      ? activeFilterBtn.getAttribute("data-category")
+      : "all";
 
-    document.querySelectorAll(".menu-card-item").forEach((card) => {
+    let visibleCount = 0;
+    const allCards = document.querySelectorAll(".menu-card-item");
+
+    allCards.forEach((card) => {
       const cardCat = card.getAttribute("data-category") || "";
       const cardName = card.getAttribute("data-name") || "";
       const cardDesc = card.getAttribute("data-desc") || "";
 
       const matchesCat = selectedCategory === "all" || cardCat === selectedCategory;
-      const matchesSearch = query === "" || cardName.includes(query) || cardDesc.includes(query);
+      const matchesSearch =
+        query === "" || cardName.includes(query) || cardDesc.includes(query);
 
       if (matchesCat && matchesSearch) {
         card.style.display = "flex";
+        visibleCount++;
       } else {
         card.style.display = "none";
       }
     });
+
+    if (resultsCountEl) {
+      if (query.length > 0) {
+        resultsCountEl.style.display = "block";
+        resultsCountEl.textContent = `Showing ${visibleCount} matching item${
+          visibleCount === 1 ? "" : "s"
+        }`;
+      } else {
+        resultsCountEl.style.display = "none";
+      }
+    }
+
+    if (noResultsEl) {
+      noResultsEl.style.display = visibleCount === 0 ? "block" : "none";
+    }
   };
 
-  // ---------------- Review Modal Handling ----------------
+  // ==========================================================================
+  // 9. MOBILE NAVIGATION DRAWER
+  // ==========================================================================
+  const hamburgerBtn = document.getElementById("hamburger-btn");
+  const mobileDrawer = document.getElementById("mobile-drawer");
+  const mobileBackdrop = document.getElementById("mobile-backdrop");
+  const closeDrawerBtn = document.getElementById("close-drawer-btn");
+
+  const openMobileDrawer = () => {
+    if (mobileDrawer) mobileDrawer.classList.add("is-open");
+    if (mobileBackdrop) mobileBackdrop.classList.add("is-open");
+    document.body.style.overflow = "hidden";
+  };
+
+  const closeMobileDrawer = () => {
+    if (mobileDrawer) mobileDrawer.classList.remove("is-open");
+    if (mobileBackdrop) mobileBackdrop.classList.remove("is-open");
+    document.body.style.overflow = "";
+  };
+
+  if (hamburgerBtn) hamburgerBtn.addEventListener("click", openMobileDrawer);
+  if (closeDrawerBtn) closeDrawerBtn.addEventListener("click", closeMobileDrawer);
+  if (mobileBackdrop) mobileBackdrop.addEventListener("click", closeMobileDrawer);
+
+  document.querySelectorAll(".mobile-link").forEach((link) => {
+    link.addEventListener("click", closeMobileDrawer);
+  });
+
+  // ==========================================================================
+  // 10. REVIEWS MODAL HANDLING
+  // ==========================================================================
   window.openReviewModal = async function (itemId, itemName) {
     const modal = document.getElementById("review-modal");
     const backdrop = document.getElementById("review-modal-backdrop");
@@ -428,13 +599,13 @@ document.addEventListener("DOMContentLoaded", () => {
         listEl.innerHTML = data.reviews
           .map(
             (r) => `
-          <div style="border-bottom: 1px solid var(--border-color); padding: 0.5rem 0;">
+          <div style="border-bottom: 1px solid var(--border-color); padding: 0.65rem 0;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <strong>${r.user_name}</strong>
-              <span style="color: #F59F00; font-weight: 700;">★ ${r.rating}</span>
+              <strong style="color: var(--text-main); font-size: 0.95rem;">${r.user_name}</strong>
+              <span style="color: #F59F00; font-weight: 800; font-size: 0.88rem;">★ ${r.rating}</span>
             </div>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 2px 0;">${r.comment || "Great pizza!"}</p>
-            <span style="font-size: 0.72rem; color: #adb5bd;">${r.date}</span>
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin: 3px 0;">${r.comment || "Great artisanal pizza!"}</p>
+            <span style="font-size: 0.72rem; color: var(--text-light);">${r.date}</span>
           </div>
         `
           )
@@ -473,9 +644,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
 
       if (res.ok) {
-        showToast("Thank you for your rating & review!", "success");
+        showToast("Thank you for your rating & review! ⭐", "success");
         closeReviewModal();
-        document.getElementById("review-comment-input").value = "";
+        const input = document.getElementById("review-comment-input");
+        if (input) input.value = "";
       } else {
         if (res.status === 401) {
           window.location.href = `/auth/login?next=/`;
@@ -488,7 +660,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // ---------------- Checkout Order Form Submission ----------------
+  // ==========================================================================
+  // 11. CHECKOUT ORDER FORM SUBMISSION
+  // ==========================================================================
   const orderForm = document.getElementById("order-form");
   if (orderForm) {
     orderForm.addEventListener("submit", function (e) {
@@ -556,7 +730,60 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Initial runs
+  // ==========================================================================
+  // 12. LIVE ORDER STATUS POLLING (FOR /orders/{id} TRACKING)
+  // ==========================================================================
+  const trackingBar = document.getElementById("timeline-progress-bar");
+  if (trackingBar) {
+    const orderPathMatch = window.location.pathname.match(/\/orders\/(\d+)/);
+    if (orderPathMatch && orderPathMatch[1]) {
+      const orderId = orderPathMatch[1];
+      const pollOrderStatus = async () => {
+        try {
+          const res = await fetch(`/api/orders/${orderId}/status`);
+          if (res.ok) {
+            const data = await res.json();
+            const statusText = document.getElementById("live-status-text");
+            if (statusText && data.status) {
+              statusText.textContent = data.status;
+            }
+
+            const stepIndex = data.current_step_index;
+            if (typeof stepIndex === "number") {
+              const percentages = [0, 33, 66, 100];
+              const pct = percentages[Math.min(stepIndex, 3)];
+              trackingBar.style.width = `${pct * 0.8}%`;
+
+              // Highlight nodes
+              for (let i = 0; i <= 3; i++) {
+                const node = document.getElementById(`step-node-${i}`);
+                if (node) {
+                  if (i <= stepIndex) {
+                    node.style.background = "var(--gradient-fire)";
+                    node.style.color = "#FFFFFF";
+                    node.style.boxShadow = "0 4px 14px rgba(230, 42, 16, 0.4)";
+                  } else {
+                    node.style.background = "var(--bg-subtle)";
+                    node.style.color = "var(--text-muted)";
+                    node.style.boxShadow = "none";
+                  }
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("Could not poll order status:", e);
+        }
+      };
+
+      // Poll every 12 seconds
+      setInterval(pollOrderStatus, 12000);
+    }
+  }
+
+  // ==========================================================================
+  // 13. INITIAL RUNS
+  // ==========================================================================
   updateCartCount();
   renderCart();
 });
