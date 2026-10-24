@@ -964,7 +964,87 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================================================================
-  // 13. INITIAL RUNS
+  // 13. DARK / LIGHT THEME CONTROLLER
+  // ==========================================================================
+  const themeToggleBtn = document.getElementById("theme-toggle");
+  const mobileThemeToggle = document.getElementById("mobile-theme-toggle");
+  const mobileThemeEmoji = document.getElementById("mobile-theme-emoji");
+  const mobileThemeText = document.getElementById("mobile-theme-text");
+
+  function getActiveTheme() {
+    return document.documentElement.getAttribute("data-theme") || 
+      localStorage.getItem("crustflame_theme") || 
+      (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  }
+
+  function applyTheme(theme, animate = false) {
+    if (animate) {
+      document.documentElement.classList.add("theme-transitioning");
+      setTimeout(() => {
+        document.documentElement.classList.remove("theme-transitioning");
+      }, 350);
+    }
+
+    document.documentElement.setAttribute("data-theme", theme);
+    try {
+      localStorage.setItem("crustflame_theme", theme);
+    } catch (e) {}
+
+    // Update Desktop button accessibility attributes
+    if (themeToggleBtn) {
+      const isDark = theme === "dark";
+      themeToggleBtn.setAttribute("title", isDark ? "Switch to Light Mode" : "Switch to Dark Mode");
+      themeToggleBtn.setAttribute("aria-label", isDark ? "Switch to Light Mode" : "Switch to Dark Mode");
+    }
+
+    // Update Mobile switch indicators
+    if (mobileThemeEmoji && mobileThemeText) {
+      if (theme === "dark") {
+        mobileThemeEmoji.textContent = "☀️";
+        mobileThemeText.textContent = "Light Mode";
+      } else {
+        mobileThemeEmoji.textContent = "🌙";
+        mobileThemeText.textContent = "Dark Mode";
+      }
+    }
+
+    window.dispatchEvent(new CustomEvent("themeChanged", { detail: { theme } }));
+  }
+
+  function toggleTheme() {
+    const currentTheme = getActiveTheme();
+    const nextTheme = currentTheme === "dark" ? "light" : "dark";
+    applyTheme(nextTheme, true);
+
+    const label = nextTheme === "dark" ? "Dark Mode activated 🌙" : "Light Mode activated ☀️";
+    if (typeof window.showToast === "function") {
+      window.showToast(label, "info");
+    }
+  }
+
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener("click", toggleTheme);
+  }
+
+  if (mobileThemeToggle) {
+    mobileThemeToggle.addEventListener("click", toggleTheme);
+  }
+
+  // Sync initial state
+  applyTheme(getActiveTheme(), false);
+
+  // Listen to OS system color-scheme preference changes
+  if (window.matchMedia) {
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+      const stored = localStorage.getItem("crustflame_theme");
+      if (!stored) {
+        applyTheme(e.matches ? "dark" : "light", true);
+      }
+    });
+  }
+
+  // ==========================================================================
+  // 14. INITIAL RUNS
   // ==========================================================================
   updateCartCount();
   renderCart();

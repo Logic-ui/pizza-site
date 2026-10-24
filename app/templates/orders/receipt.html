@@ -13,13 +13,37 @@
     rel="stylesheet"
   />
 
+  <!-- Immediate Zero-FOUC Dark/Light Theme Initialization -->
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('crustflame_theme');
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = saved || (prefersDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
+
   <style>
     :root {
       --primary: #E62A10;
       --text-main: #141210;
       --text-muted: #6B7280;
       --border-color: #E5E7EB;
+      --bg-page: #F3F4F6;
+      --bg-card: #FFFFFF;
       --bg-subtle: #F9FAFB;
+    }
+
+    [data-theme="dark"] {
+      --primary: #FF4726;
+      --text-main: #FDFBF7;
+      --text-muted: #9E948A;
+      --border-color: #2D2723;
+      --bg-page: #0C0A09;
+      --bg-card: #171412;
+      --bg-subtle: #211D1A;
     }
 
     * {
@@ -30,13 +54,14 @@
 
     body {
       font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-      background: #F3F4F6;
+      background: var(--bg-page);
       color: var(--text-main);
       padding: 2.5rem 1rem;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
     .receipt-actions-bar {
@@ -72,23 +97,23 @@
     }
 
     .btn-back {
-      background: #FFFFFF;
-      color: #374151;
-      border: 1.5px solid #D1D5DB;
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1.5px solid var(--border-color);
     }
 
     .btn-back:hover {
-      background: #F9FAFB;
+      background: var(--bg-subtle);
     }
 
     .receipt-container {
-      background: #FFFFFF;
+      background: var(--bg-card);
       width: 100%;
       max-width: 680px;
       border-radius: 20px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
       padding: 3rem;
-      border: 1px solid #E5E7EB;
+      border: 1px solid var(--border-color);
       position: relative;
     }
 
@@ -309,7 +334,10 @@
     <a href="/orders/{{ order.id }}" class="btn btn-back">
       &larr; Live Tracking
     </a>
-    <div style="display: flex; gap: 0.5rem;">
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+      <button id="receipt-theme-toggle" class="btn btn-back" title="Toggle Dark/Light Mode">
+        🌓 Mode
+      </button>
       <a href="/" class="btn btn-back">🍕 Menu</a>
       <button onclick="window.print()" class="btn btn-print">
         🖨️ Print Receipt
@@ -515,5 +543,18 @@
 
   </div>
 
+  <script>
+    const themeBtn = document.getElementById("receipt-theme-toggle");
+    if (themeBtn) {
+      themeBtn.addEventListener("click", () => {
+        const cur = document.documentElement.getAttribute("data-theme") || "light";
+        const next = cur === "dark" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", next);
+        try {
+          localStorage.setItem("crustflame_theme", next);
+        } catch (e) {}
+      });
+    }
+  </script>
 </body>
 </html>
