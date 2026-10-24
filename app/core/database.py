@@ -41,7 +41,11 @@ def auto_migrate():
                 ("tax", "FLOAT DEFAULT 0.0"),
                 ("delivery_fee", "FLOAT DEFAULT 0.0"),
                 ("discount", "FLOAT DEFAULT 0.0"),
+                ("tip_amount", "FLOAT DEFAULT 0.0"),
                 ("coupon_code", "VARCHAR(50)"),
+                ("points_earned", "INTEGER DEFAULT 0"),
+                ("points_redeemed", "INTEGER DEFAULT 0"),
+                ("order_type", "VARCHAR(20) DEFAULT 'delivery'"),
                 ("payment_method", "VARCHAR(30) DEFAULT 'cod'"),
                 ("payment_status", "VARCHAR(30) DEFAULT 'pending'"),
                 ("updated_at", "DATETIME"),
@@ -57,9 +61,22 @@ def auto_migrate():
             # Backfill order_number for existing rows
             try:
                 conn.execute(text("UPDATE orders SET order_number = 'ORD-' || id WHERE order_number IS NULL"))
+                conn.execute(text("UPDATE orders SET order_type = 'delivery' WHERE order_type IS NULL"))
+                conn.execute(text("UPDATE orders SET tip_amount = 0.0 WHERE tip_amount IS NULL"))
                 conn.commit()
             except Exception:
                 pass
+
+        # Migrate 'users' table
+        if "users" in tables:
+            columns = [c["name"] for c in inspector.get_columns("users")]
+            if "loyalty_points" not in columns:
+                try:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN loyalty_points INTEGER DEFAULT 100"))
+                    conn.execute(text("UPDATE users SET loyalty_points = 100 WHERE loyalty_points IS NULL"))
+                    conn.commit()
+                except Exception:
+                    pass
 
         # Migrate 'order_items' table
         if "order_items" in tables:

@@ -125,6 +125,24 @@
 
   <!-- Right Column: Profile Edit Form -->
   <div class="checkout-card">
+    <!-- Loyalty Rewards Summary Card -->
+    <div style="background: linear-gradient(135deg, #1C1917 0%, #2A2421 100%); color: #FFFFFF; border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-md); border: 1px solid rgba(255, 122, 0, 0.25);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.85rem;">
+        <div>
+          <span style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1.5px; color: #FFA800; font-weight: 800;">Crust Loyalty Rewards</span>
+          <div style="font-size: 2rem; font-weight: 800; color: #FFB300; line-height: 1.2; margin-top: 2px;">
+            {{ user.loyalty_points or 0 }} <span style="font-size: 1rem; color: #E5DFD7;">Points</span>
+          </div>
+        </div>
+        <span style="background: rgba(255, 179, 0, 0.18); color: #FFB300; border: 1px solid rgba(255, 179, 0, 0.35); font-size: 0.78rem; font-weight: 800; padding: 0.35rem 0.85rem; border-radius: var(--radius-full);">
+          👑 {{ user.loyalty_tier() }}
+        </span>
+      </div>
+      <p style="font-size: 0.82rem; color: #C5BFB8; line-height: 1.5;">
+        You earn <strong>10 points</strong> for every $1 spent. Redeem 100 points at checkout for <strong>$5.00 OFF</strong> your pizza order!
+      </p>
+    </div>
+
     <h2 style="font-size: 1.35rem; margin-bottom: 1.25rem;">Personal Details</h2>
 
     <form method="post" action="/profile">

@@ -322,6 +322,81 @@
     <!-- Modal Scrollable Body -->
     <div class="customizer-modal-body">
       
+      <!-- INTERACTIVE VISUAL PIZZA BUILDER -->
+      <div class="pizza-visual-builder-container">
+        <div class="pizza-canvas-disk" id="pizza-visual-disk">
+          <!-- Crust Rim Layer -->
+          <div class="pizza-crust-layer" id="visual-crust-layer"></div>
+          <!-- Sauce Layer -->
+          <div class="pizza-sauce-layer"></div>
+          <!-- Melted Mozzarella Layer -->
+          <div class="pizza-cheese-layer"></div>
+
+          <!-- Dynamic Toppings Groups (Toggled by Checkboxes) -->
+          <div class="pizza-toppings-layer" id="visual-toppings-layer">
+            <!-- Pepperoni Slices -->
+            <div class="topping-graphic-group topping-group-pepperoni" id="topping-viz-pepperoni" style="display: none;">
+              <span class="topping-piece p-slice p1"></span>
+              <span class="topping-piece p-slice p2"></span>
+              <span class="topping-piece p-slice p3"></span>
+              <span class="topping-piece p-slice p4"></span>
+              <span class="topping-piece p-slice p5"></span>
+              <span class="topping-piece p-slice p6"></span>
+              <span class="topping-piece p-slice p7"></span>
+            </div>
+
+            <!-- Fresh Basil Leaves -->
+            <div class="topping-graphic-group topping-group-basil" id="topping-viz-basil" style="display: none;">
+              <span class="topping-piece b-leaf b1">🌿</span>
+              <span class="topping-piece b-leaf b2">🌿</span>
+              <span class="topping-piece b-leaf b3">🌿</span>
+              <span class="topping-piece b-leaf b4">🌿</span>
+              <span class="topping-piece b-leaf b5">🌿</span>
+            </div>
+
+            <!-- Wild Mushrooms -->
+            <div class="topping-graphic-group topping-group-mushrooms" id="topping-viz-mushrooms" style="display: none;">
+              <span class="topping-piece m-piece m1">🍄</span>
+              <span class="topping-piece m-piece m2">🍄</span>
+              <span class="topping-piece m-piece m3">🍄</span>
+              <span class="topping-piece m-piece m4">🍄</span>
+              <span class="topping-piece m-piece m5">🍄</span>
+            </div>
+
+            <!-- Calabrian Chilies -->
+            <div class="topping-graphic-group topping-group-chilies" id="topping-viz-chilies" style="display: none;">
+              <span class="topping-piece c-chili c1">🌶️</span>
+              <span class="topping-piece c-chili c2">🌶️</span>
+              <span class="topping-piece c-chili c3">🌶️</span>
+              <span class="topping-piece c-chili c4">🌶️</span>
+            </div>
+
+            <!-- Kalamata Olives -->
+            <div class="topping-graphic-group topping-group-olives" id="topping-viz-olives" style="display: none;">
+              <span class="topping-piece o-ring o1">🫒</span>
+              <span class="topping-piece o-ring o2">🫒</span>
+              <span class="topping-piece o-ring o3">🫒</span>
+              <span class="topping-piece o-ring o4">🫒</span>
+            </div>
+
+            <!-- Extra Cheese Melt Overlay -->
+            <div class="topping-graphic-group topping-group-cheese" id="topping-viz-cheese" style="display: none;">
+              <div class="extra-cheese-melt-glow"></div>
+            </div>
+
+            <!-- Truffle Oil / Gold Sheen -->
+            <div class="topping-graphic-group topping-group-truffle" id="topping-viz-truffle" style="display: none;">
+              <div class="truffle-oil-shimmer">✨ Truffle Drizzle</div>
+            </div>
+          </div>
+
+          <!-- Live Visual Pill -->
+          <div class="visual-pizza-badge" id="visual-pizza-badge">
+            🍕 Regular (12") &middot; Neapolitan Dough
+          </div>
+        </div>
+      </div>
+      
       <!-- STEP 1: SIZE SELECTION -->
       <div class="customizer-section">
         <div class="section-step-header">

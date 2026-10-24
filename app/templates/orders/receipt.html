@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Receipt #{{ order.order_number or order.id }} &middot; Crust & Flame Pizzeria</title>
+  
+  <!-- Google Fonts: Plus Jakarta Sans & Playfair Display -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    :root {
+      --primary: #E62A10;
+      --text-main: #141210;
+      --text-muted: #6B7280;
+      --border-color: #E5E7EB;
+      --bg-subtle: #F9FAFB;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background: #F3F4F6;
+      color: var(--text-main);
+      padding: 2.5rem 1rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .receipt-actions-bar {
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1.25rem;
+      font-weight: 700;
+      font-size: 0.9rem;
+      border-radius: 9999px;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-print {
+      background: #111827;
+      color: #FFFFFF;
+    }
+
+    .btn-print:hover {
+      background: #374151;
+    }
+
+    .btn-back {
+      background: #FFFFFF;
+      color: #374151;
+      border: 1.5px solid #D1D5DB;
+    }
+
+    .btn-back:hover {
+      background: #F9FAFB;
+    }
+
+    .receipt-container {
+      background: #FFFFFF;
+      width: 100%;
+      max-width: 680px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      padding: 3rem;
+      border: 1px solid #E5E7EB;
+      position: relative;
+    }
+
+    /* Top Serrated Decorative Edge */
+    .receipt-container::before {
+      content: "";
+      position: absolute;
+      top: -8px;
+      left: 0;
+      right: 0;
+      height: 8px;
+      background: radial-gradient(circle, transparent, transparent 50%, #FFFFFF 50%, #FFFFFF 100%);
+      background-size: 16px 16px;
+    }
+
+    .receipt-header {
+      text-align: center;
+      padding-bottom: 2rem;
+      border-bottom: 2px dashed #E5E7EB;
+      margin-bottom: 2rem;
+    }
+
+    .receipt-logo {
+      font-size: 2.2rem;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+
+    .brand-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .store-address {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+      line-height: 1.5;
+    }
+
+    .receipt-badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 0.35rem 1rem;
+      border-radius: 9999px;
+      margin-top: 1rem;
+    }
+
+    .badge-delivery {
+      background: #FEF3C7;
+      color: #92400E;
+    }
+
+    .badge-pickup {
+      background: #DEF7EC;
+      color: #03543F;
+    }
+
+    .order-meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+      font-size: 0.9rem;
+    }
+
+    .meta-box h4 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .meta-box p {
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .receipt-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 2rem;
+    }
+
+    .receipt-table th {
+      text-align: left;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.8px;
+      padding-bottom: 0.75rem;
+      border-bottom: 1.5px solid #E5E7EB;
+    }
+
+    .receipt-table td {
+      padding: 1rem 0;
+      border-bottom: 1px solid #F3F4F6;
+      vertical-align: top;
+      font-size: 0.92rem;
+    }
+
+    .receipt-item-title {
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .receipt-item-details {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 3px;
+      line-height: 1.4;
+    }
+
+    .receipt-totals {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      padding-top: 1rem;
+      border-top: 2px dashed #E5E7EB;
+      margin-bottom: 2rem;
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.92rem;
+      color: #4B5563;
+    }
+
+    .grand-total-row {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #111827;
+      padding-top: 0.75rem;
+      border-top: 1.5px solid #111827;
+      margin-top: 0.35rem;
+    }
+
+    .grand-total-row span:last-child {
+      color: var(--primary);
+    }
+
+    .loyalty-earned-banner {
+      background: #FDF2E9;
+      border: 1px dashed #F6AD55;
+      padding: 0.85rem 1.15rem;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.88rem;
+      color: #C05621;
+      margin-bottom: 2rem;
+      font-weight: 600;
+    }
+
+    .receipt-qr-section {
+      text-align: center;
+      padding-top: 1.5rem;
+      border-top: 1px solid #E5E7EB;
+    }
+
+    .qr-box {
+      display: inline-block;
+      padding: 1rem;
+      background: #FFFFFF;
+      border: 1px solid #E5E7EB;
+      border-radius: 14px;
+      margin-bottom: 0.75rem;
+    }
+
+    .barcode-display {
+      font-family: 'Space Mono', monospace;
+      letter-spacing: 4px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .receipt-footer-msg {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 1rem;
+      line-height: 1.5;
+    }
+
+    /* Print Specific Media Styles */
+    @media print {
+      body {
+        background: #FFFFFF;
+        padding: 0;
+      }
+      .receipt-actions-bar {
+        display: none !important;
+      }
+      .receipt-container {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+      .receipt-container::before {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Screen Actions Bar (Hidden during print) -->
+  <div class="receipt-actions-bar">
+    <a href="/orders/{{ order.id }}" class="btn btn-back">
+      &larr; Live Tracking
+    </a>
+    <div style="display: flex; gap: 0.5rem;">
+      <a href="/" class="btn btn-back">🍕 Menu</a>
+      <button onclick="window.print()" class="btn btn-print">
+        🖨️ Print Receipt
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Invoice Card -->
+  <div class="receipt-container">
+    
+    <!-- Header -->
+    <div class="receipt-header">
+      <div class="receipt-logo">🍕</div>
+      <h1 class="brand-title">Crust & Flame</h1>
+      <p class="store-address">
+        Artisanal Wood-Fired Neapolitan Pizzeria<br />
+        142 Artisan Boulevard, Food District &middot; Phone: (555) 347-3866<br />
+        orders@crustandflame.com &middot; www.crustandflame.com
+      </p>
+
+      {% if order.order_type == 'pickup' %}
+        <span class="receipt-badge badge-pickup">🏬 Store Pickup / Carryout</span>
+      {% else %}
+        <span class="receipt-badge badge-delivery">🛵 Home Delivery</span>
+      {% endif %}
+    </div>
+
+    <!-- Meta Details -->
+    <div class="order-meta-grid">
+      <div class="meta-box">
+        <h4>Order Reference</h4>
+        <p class="barcode-display">#{{ order.order_number or order.id }}</p>
+      </div>
+      <div class="meta-box">
+        <h4>Date & Time Placed</h4>
+        <p>{{ order.created_at.strftime('%b %d, %Y - %I:%M %p') }}</p>
+      </div>
+      <div class="meta-box">
+        <h4>Customer Details</h4>
+        <p>{{ order.customer_name }}</p>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">{{ order.customer_email }}</span>
+        {% if order.customer_phone %}
+          <div style="font-size: 0.8rem; color: var(--text-muted);">{{ order.customer_phone }}</div>
+        {% endif %}
+      </div>
+      <div class="meta-box">
+        <h4>Fulfillment Address</h4>
+        <p>{{ order.address }}</p>
+        {% if order.delivery_notes %}
+          <div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic; margin-top: 2px;">
+            Note: {{ order.delivery_notes }}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Itemized Items Table -->
+    <table class="receipt-table">
+      <thead>
+        <tr>
+          <th>Description & Options</th>
+          <th style="text-align: center;">Qty</th>
+          <th style="text-align: right;">Unit Price</th>
+          <th style="text-align: right;">Line Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for it in order.items %}
+          <tr>
+            <td>
+              <div class="receipt-item-title">{{ it.menu_item.name if it.menu_item else 'Pizza Item' }}</div>
+              <div class="receipt-item-details">
+                {% if it.size %}Size: {{ it.size }}{% endif %}
+                {% if it.crust %}&bull; Crust: {{ it.crust.name }}{% endif %}
+                {% if it.toppings %}
+                  <div>+ Toppings: {{ it.toppings|map(attribute='topping_name')|join(', ') }}</div>
+                {% endif %}
+                {% if it.special_instructions %}
+                  <div style="font-style: italic;">"{{ it.special_instructions }}"</div>
+                {% endif %}
+              </div>
+            </td>
+            <td style="text-align: center; font-weight: 700;">{{ it.quantity }}</td>
+            <td style="text-align: right;">${{ '%.2f'|format(it.unit_price) }}</td>
+            <td style="text-align: right; font-weight: 700;">${{ '%.2f'|format(it.line_total) }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Totals Breakdown -->
+    <div class="receipt-totals">
+      <div class="total-row">
+        <span>Items Subtotal</span>
+        <span>${{ '%.2f'|format(order.subtotal) }}</span>
+      </div>
+
+      {% if order.discount > 0 %}
+        <div class="total-row" style="color: #2E7D32; font-weight: 600;">
+          <span>
+            Savings / Discount
+            {% if order.coupon_code %}(Promo: {{ order.coupon_code }}){% endif %}
+            {% if order.points_redeemed > 0 %}(100 Loyalty Points){% endif %}
+          </span>
+          <span>-${{ '%.2f'|format(order.discount) }}</span>
+        </div>
+      {% endif %}
+
+      <div class="total-row">
+        <span>Estimated Sales Tax (8%)</span>
+        <span>${{ '%.2f'|format(order.tax) }}</span>
+      </div>
+
+      <div class="total-row">
+        <span>{{ 'Store Pickup' if order.order_type == 'pickup' else 'Express Delivery Fee' }}</span>
+        <span style="font-weight: 700;">
+          {{ 'FREE ($0.00)' if (order.delivery_fee == 0 or order.order_type == 'pickup') else '$' ~ '%.2f'|format(order.delivery_fee) }}
+        </span>
+      </div>
+
+      {% if order.tip_amount > 0 %}
+        <div class="total-row">
+          <span>Driver Courtesy Tip</span>
+          <span>${{ '%.2f'|format(order.tip_amount) }}</span>
+        </div>
+      {% endif %}
+
+      <div class="total-row grand-total-row">
+        <span>Total Paid / Due</span>
+        <span>${{ '%.2f'|format(order.total) }}</span>
+      </div>
+
+      <div class="total-row" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">
+        <span>Payment Method</span>
+        <span style="font-weight: 700; text-transform: uppercase;">
+          {{ 'Cash on Delivery (COD)' if order.payment_method == 'cod' else 'Card / Online' }}
+          &middot; Status: {{ order.payment_status }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Loyalty Points Banner -->
+    {% if order.points_earned > 0 %}
+      <div class="loyalty-earned-banner">
+        <span style="font-size: 1.35rem;">🪙</span>
+        <div>
+          <strong>You earned {{ order.points_earned }} Crust Points on this order!</strong>
+          <div style="font-size: 0.8rem; margin-top: 2px;">
+            Redeem points on future orders for instant discounts.
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Verification QR Code & Barcode -->
+    <div class="receipt-qr-section">
+      <div class="qr-box">
+        <!-- SVG QR Code Visual Graphic linking to order verification -->
+        <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="100" fill="white"/>
+          <!-- Position Detection Patterns (Top-Left) -->
+          <rect x="10" y="10" width="28" height="28" fill="#111827"/>
+          <rect x="14" y="14" width="20" height="20" fill="white"/>
+          <rect x="18" y="18" width="12" height="12" fill="#111827"/>
+          
+          <!-- Position Detection Patterns (Top-Right) -->
+          <rect x="62" y="10" width="28" height="28" fill="#111827"/>
+          <rect x="66" y="14" width="20" height="20" fill="white"/>
+          <rect x="70" y="18" width="12" height="12" fill="#111827"/>
+          
+          <!-- Position Detection Patterns (Bottom-Left) -->
+          <rect x="10" y="62" width="28" height="28" fill="#111827"/>
+          <rect x="14" y="66" width="20" height="20" fill="white"/>
+          <rect x="18" y="70" width="12" height="12" fill="#111827"/>
+          
+          <!-- Dynamic QR Grid Dots -->
+          <rect x="44" y="12" width="6" height="6" fill="#111827"/>
+          <rect x="52" y="16" width="6" height="6" fill="#111827"/>
+          <rect x="44" y="28" width="6" height="6" fill="#111827"/>
+          <rect x="12" y="44" width="6" height="6" fill="#111827"/>
+          <rect x="24" y="48" width="6" height="6" fill="#111827"/>
+          <rect x="36" y="44" width="6" height="6" fill="#111827"/>
+          <rect x="46" y="46" width="8" height="8" fill="#E62A10"/>
+          <rect x="58" y="44" width="6" height="6" fill="#111827"/>
+          <rect x="70" y="48" width="6" height="6" fill="#111827"/>
+          <rect x="82" y="44" width="6" height="6" fill="#111827"/>
+          <rect x="44" y="62" width="6" height="6" fill="#111827"/>
+          <rect x="52" y="70" width="6" height="6" fill="#111827"/>
+          <rect x="64" y="66" width="6" height="6" fill="#111827"/>
+          <rect x="76" y="72" width="6" height="6" fill="#111827"/>
+          <rect x="84" y="64" width="6" height="6" fill="#111827"/>
+          <rect x="64" y="80" width="6" height="6" fill="#111827"/>
+          <rect x="78" y="84" width="6" height="6" fill="#111827"/>
+        </svg>
+      </div>
+
+      <div class="barcode-display">*{{ order.order_number or order.id }}*</div>
+      <p class="receipt-footer-msg">
+        Scan to view live order tracking & status updates.<br />
+        Grazie mille for ordering with Crust & Flame! Baked with passion at 900°F.
+      </p>
+    </div>
+
+  </div>
+
+</body>
+</html>

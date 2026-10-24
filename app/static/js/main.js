@@ -195,6 +195,47 @@ document.addEventListener("DOMContentLoaded", () => {
       summaryPill.textContent = `${sizeName} • ${crustName}${topText}`;
     }
 
+    // 4. Update Interactive Visual Pizza Builder Layers
+    const visualDisk = document.getElementById("pizza-visual-disk");
+    const visualCrust = document.getElementById("visual-crust-layer");
+    const visualBadge = document.getElementById("visual-pizza-badge");
+
+    if (visualDisk) {
+      visualDisk.classList.remove("scale-small", "scale-regular", "scale-large");
+      if (sizeName === "Small") visualDisk.classList.add("scale-small");
+      else if (sizeName === "Large") visualDisk.classList.add("scale-large");
+      else visualDisk.classList.add("scale-regular");
+    }
+
+    if (visualCrust) {
+      if (crustName.toLowerCase().includes("stuffed") || crustName.toLowerCase().includes("cheese")) {
+        visualCrust.classList.add("crust-stuffed");
+      } else {
+        visualCrust.classList.remove("crust-stuffed");
+      }
+    }
+
+    // Dynamic Topping Graphic Groups
+    const checkedToppingNames = Array.from(document.querySelectorAll(".modal-topping-checkbox:checked"))
+      .map(cb => (cb.getAttribute("data-name") || "").toLowerCase());
+
+    const toggleGroup = (id, condition) => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = condition ? "block" : "none";
+    };
+
+    toggleGroup("topping-viz-pepperoni", checkedToppingNames.some(n => n.includes("pepperoni") || n.includes("sausage") || n.includes("meat")));
+    toggleGroup("topping-viz-basil", checkedToppingNames.some(n => n.includes("basil") || n.includes("spinach") || n.includes("herb")));
+    toggleGroup("topping-viz-mushrooms", checkedToppingNames.some(n => n.includes("mushroom")));
+    toggleGroup("topping-viz-chilies", checkedToppingNames.some(n => n.includes("chili") || n.includes("spicy") || n.includes("jalapeno")));
+    toggleGroup("topping-viz-olives", checkedToppingNames.some(n => n.includes("olive")));
+    toggleGroup("topping-viz-cheese", checkedToppingNames.some(n => n.includes("mozzarella") || n.includes("parmesan") || n.includes("cheese")));
+    toggleGroup("topping-viz-truffle", checkedToppingNames.some(n => n.includes("truffle") || n.includes("oil")));
+
+    if (visualBadge) {
+      visualBadge.textContent = `🍕 ${sizeName} &middot; ${crustName}${toppingsCount > 0 ? ` &middot; +${toppingsCount} Topping${toppingsCount > 1 ? 's' : ''}` : ''}`;
+    }
+
     return { unitPrice, totalPrice };
   };
 
@@ -305,6 +346,86 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  // Fulfillment Mode (Delivery vs. Store Pickup)
+  window.currentFulfillment = "delivery";
+  window.selectedTipType = 0;
+  window.customTipAmount = 0.0;
+  window.isRedeemingPoints = false;
+
+  window.setFulfillmentMode = function (mode) {
+    window.currentFulfillment = mode;
+    const hiddenType = document.getElementById("hidden-order-type");
+    if (hiddenType) hiddenType.value = mode;
+
+    const delBtn = document.getElementById("seg-delivery-btn");
+    const pickBtn = document.getElementById("seg-pickup-btn");
+    const pickupCard = document.getElementById("pickup-info-card");
+    const addrGroup = document.getElementById("delivery-address-group");
+    const addrInput = document.getElementById("address");
+    const tipSection = document.getElementById("tip-section");
+    const submitText = document.getElementById("submit-order-text");
+
+    if (mode === "pickup") {
+      if (delBtn) delBtn.classList.remove("active");
+      if (pickBtn) pickBtn.classList.add("active");
+      if (pickupCard) pickupCard.style.display = "block";
+      if (addrGroup) addrGroup.style.display = "none";
+      if (addrInput) addrInput.required = false;
+      if (tipSection) tipSection.style.display = "none";
+      if (submitText) submitText.textContent = "Place Store Pickup Order";
+    } else {
+      if (pickBtn) pickBtn.classList.remove("active");
+      if (delBtn) delBtn.classList.add("active");
+      if (pickupCard) pickupCard.style.display = "none";
+      if (addrGroup) addrGroup.style.display = "block";
+      if (addrInput) addrInput.required = true;
+      if (tipSection) tipSection.style.display = "block";
+      if (submitText) submitText.textContent = "Place Delivery Order Now";
+    }
+
+    renderCart();
+  };
+
+  // Driver Tip Selection
+  window.selectTip = function (val, btn) {
+    window.selectedTipType = Number(val);
+    document.querySelectorAll(".tip-btn").forEach((b) => b.classList.remove("active"));
+    if (btn) btn.classList.add("active");
+
+    const customWrap = document.getElementById("custom-tip-wrap");
+    if (customWrap) customWrap.style.display = "none";
+
+    renderCart();
+  };
+
+  window.selectCustomTip = function (btn) {
+    window.selectedTipType = "custom";
+    document.querySelectorAll(".tip-btn").forEach((b) => b.classList.remove("active"));
+    if (btn) btn.classList.add("active");
+
+    const customWrap = document.getElementById("custom-tip-wrap");
+    if (customWrap) {
+      customWrap.style.display = "block";
+      const input = document.getElementById("custom-tip-input");
+      if (input) input.focus();
+    }
+
+    renderCart();
+  };
+
+  window.updateCustomTip = function (val) {
+    window.customTipAmount = Math.max(0.0, parseFloat(val) || 0.0);
+    renderCart();
+  };
+
+  // Loyalty Points Redemption
+  window.toggleRedeemPoints = function (checked) {
+    window.isRedeemingPoints = Boolean(checked);
+    const hiddenPoints = document.getElementById("hidden-redeem-points");
+    if (hiddenPoints) hiddenPoints.value = window.isRedeemingPoints ? "true" : "false";
+    renderCart();
+  };
+
   window.renderCart = function () {
     const tbody = document.getElementById("cart-items");
     const emptyState = document.getElementById("cart-empty-state");
@@ -313,9 +434,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const totalEl = document.getElementById("total");
     const taxEl = document.getElementById("tax-amount");
     const deliveryDisplay = document.getElementById("delivery-fee-display");
+    const deliveryLabel = document.getElementById("delivery-label");
     const discountRow = document.getElementById("discount-row");
     const discountCodeBadge = document.getElementById("discount-code-badge");
     const discountAmountEl = document.getElementById("discount-amount");
+    const pointsRow = document.getElementById("points-discount-row");
+    const tipRow = document.getElementById("tip-row");
+    const tipAmountDisplay = document.getElementById("tip-amount-display");
+    const hiddenTipInput = document.getElementById("hidden-tip-amount");
+    const pointsEarnedDisplay = document.getElementById("points-earned-display");
 
     if (!tbody) return;
 
@@ -382,36 +509,85 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (subtotalEl) subtotalEl.textContent = subtotal.toFixed(2);
 
-    // Apply Coupon Discount Calculation
-    let discount = 0;
+    // 1. Coupon Discount Calculation
+    let couponDiscount = 0;
     if (window.appliedCoupon) {
       if (window.appliedCoupon.discount_type === "percent") {
-        discount = (window.appliedCoupon.discount_value / 100.0) * subtotal;
+        couponDiscount = (window.appliedCoupon.discount_value / 100.0) * subtotal;
       } else {
-        discount = Math.min(window.appliedCoupon.discount_value, subtotal);
+        couponDiscount = Math.min(window.appliedCoupon.discount_value, subtotal);
       }
-      discount = Math.round(discount * 100) / 100;
+      couponDiscount = Math.round(couponDiscount * 100) / 100;
 
       if (discountRow) discountRow.style.display = "flex";
       if (discountCodeBadge) discountCodeBadge.textContent = window.appliedCoupon.code;
-      if (discountAmountEl) discountAmountEl.textContent = discount.toFixed(2);
+      if (discountAmountEl) discountAmountEl.textContent = couponDiscount.toFixed(2);
     } else {
       if (discountRow) discountRow.style.display = "none";
     }
 
-    const taxableAmount = Math.max(0, subtotal - discount);
+    // 2. Loyalty Points Discount ($5.00 off)
+    let pointsDiscount = 0;
+    if (window.isRedeemingPoints) {
+      pointsDiscount = Math.min(5.0, subtotal);
+      if (pointsRow) pointsRow.style.display = "flex";
+    } else {
+      if (pointsRow) pointsRow.style.display = "none";
+    }
+
+    const totalDiscount = couponDiscount + pointsDiscount;
+    const taxableAmount = Math.max(0, subtotal - totalDiscount);
     const tax = Math.round(taxableAmount * 0.08 * 100) / 100;
     if (taxEl) taxEl.textContent = tax.toFixed(2);
 
-    // Free delivery on orders $50+
-    const deliveryFee = subtotal >= 50.0 ? 0.0 : 3.5;
-    if (deliveryDisplay) {
-      deliveryDisplay.textContent = deliveryFee === 0.0 ? "FREE" : "$3.50";
-      deliveryDisplay.style.color = deliveryFee === 0.0 ? "var(--secondary)" : "inherit";
+    // 3. Delivery Fee (Waived if Store Pickup or Subtotal >= $50)
+    let deliveryFee = 0.0;
+    if (window.currentFulfillment === "pickup") {
+      deliveryFee = 0.0;
+      if (deliveryLabel) deliveryLabel.textContent = "Store Pickup (15-20 min)";
+      if (deliveryDisplay) {
+        deliveryDisplay.textContent = "FREE ($0.00)";
+        deliveryDisplay.style.color = "var(--secondary)";
+      }
+    } else {
+      deliveryFee = subtotal >= 50.0 ? 0.0 : 3.5;
+      if (deliveryLabel) deliveryLabel.textContent = "Express Delivery";
+      if (deliveryDisplay) {
+        deliveryDisplay.textContent = deliveryFee === 0.0 ? "FREE" : "$3.50";
+        deliveryDisplay.style.color = deliveryFee === 0.0 ? "var(--secondary)" : "inherit";
+      }
     }
 
-    const grandTotal = taxableAmount + tax + deliveryFee;
+    // 4. Driver Tip Calculation
+    let tip = 0.0;
+    if (window.currentFulfillment === "delivery") {
+      if (window.selectedTipType === "custom") {
+        tip = window.customTipAmount || 0.0;
+      } else if (typeof window.selectedTipType === "number" && window.selectedTipType > 0) {
+        tip = Math.round(((window.selectedTipType / 100.0) * subtotal) * 100) / 100;
+      }
+
+      if (tip > 0) {
+        if (tipRow) tipRow.style.display = "flex";
+        if (tipAmountDisplay) tipAmountDisplay.textContent = tip.toFixed(2);
+      } else {
+        if (tipRow) tipRow.style.display = "none";
+      }
+    } else {
+      if (tipRow) tipRow.style.display = "none";
+    }
+
+    if (hiddenTipInput) hiddenTipInput.value = tip.toFixed(2);
+
+    // 5. Grand Total Calculation
+    const grandTotal = Math.max(0, taxableAmount + tax + deliveryFee + tip);
     if (totalEl) totalEl.textContent = grandTotal.toFixed(2);
+
+    // 6. Points to Earn Indicator (10 points per dollar on subtotal)
+    const pointsToEarn = Math.floor(subtotal * 10);
+    if (pointsEarnedDisplay) {
+      pointsEarnedDisplay.textContent = `+${pointsToEarn} pts 🪙`;
+    }
   };
 
   // ==========================================================================
@@ -699,11 +875,17 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      if (addressInput.value.trim().length < 5) {
-        e.preventDefault();
-        addressInput.focus();
-        showToast("Please provide your complete delivery address.", "info");
-        return;
+      if (window.currentFulfillment === "pickup") {
+        if (!addressInput.value.trim()) {
+          addressInput.value = "Store Pickup: 142 Artisan Boulevard, Food District";
+        }
+      } else {
+        if (addressInput.value.trim().length < 5) {
+          e.preventDefault();
+          addressInput.focus();
+          showToast("Please provide your complete delivery address.", "info");
+          return;
+        }
       }
 
       // Append hidden cart input with JSON payload

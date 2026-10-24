@@ -60,9 +60,12 @@ async def create_order(
     request: Request,
     customer_name: str = Form(...),
     customer_email: str = Form(...),
-    address: str = Form(...),
+    address: str = Form(""),
     customer_phone: Optional[str] = Form(None),
     delivery_notes: Optional[str] = Form(None),
+    order_type: str = Form("delivery"),
+    tip_amount: float = Form(0.0),
+    redeem_points: bool = Form(False),
     payment_method: str = Form("cod"),
     coupon_code: Optional[str] = Form(None),
     cart: str = Form(...),
@@ -142,7 +145,7 @@ async def create_order(
         )
 
     # Coupon Discount
-    discount = 0.0
+    coupon_discount = 0.0
     valid_coupon = None
     if coupon_code:
         coupon_code_clean = coupon_code.strip().upper()
@@ -150,15 +153,41 @@ async def create_order(
         if coupon:
             ok, _ = coupon.is_valid_for(subtotal)
             if ok:
-                discount = coupon.calculate_discount(subtotal)
+                coupon_discount = coupon.calculate_discount(subtotal)
                 valid_coupon = coupon
                 coupon.times_used += 1
 
-    # Tax & Delivery fee
-    delivery_fee = settings.DELIVERY_FEE if subtotal < 50.0 else 0.0  # Free delivery over $50
-    taxable_amount = max(0.0, subtotal - discount)
+    # Loyalty Points Redemption ($5.00 off for 100 points)
+    points_discount = 0.0
+    points_redeemed = 0
+    if redeem_points and user and user.loyalty_points >= 100:
+        points_discount = 5.0
+        points_redeemed = 100
+        user.loyalty_points -= 100
+
+    total_discount = round(coupon_discount + points_discount, 2)
+
+    # Tax, Delivery fee & Driver Tip
+    order_type_clean = "pickup" if order_type == "pickup" else "delivery"
+    if order_type_clean == "pickup":
+        delivery_fee = 0.0
+    else:
+        delivery_fee = settings.DELIVERY_FEE if subtotal < 50.0 else 0.0
+
+    tip = max(0.0, float(tip_amount or 0.0))
+    taxable_amount = max(0.0, subtotal - total_discount)
     tax = round(taxable_amount * settings.TAX_RATE, 2)
-    grand_total = round(taxable_amount + tax + delivery_fee, 2)
+    grand_total = round(taxable_amount + tax + delivery_fee + tip, 2)
+
+    # Loyalty Points Earned (10 points per dollar spent on subtotal)
+    points_earned = int(subtotal * 10)
+    if user:
+        user.loyalty_points += points_earned
+
+    # Fulfillment address fallback for pickup
+    order_address = address.strip()
+    if order_type_clean == "pickup" and not order_address:
+        order_address = "Store Pickup: 142 Artisan Boulevard, Food District"
 
     # Create Order
     order = Order(
@@ -166,14 +195,18 @@ async def create_order(
         customer_name=customer_name.strip(),
         customer_email=customer_email.strip(),
         customer_phone=customer_phone.strip() if customer_phone else None,
-        address=address.strip(),
+        address=order_address,
         delivery_notes=delivery_notes.strip() if delivery_notes else None,
+        order_type=order_type_clean,
         subtotal=round(subtotal, 2),
         tax=tax,
         delivery_fee=delivery_fee,
-        discount=discount,
+        discount=total_discount,
+        tip_amount=round(tip, 2),
         total=grand_total,
         coupon_code=valid_coupon.code if valid_coupon else None,
+        points_earned=points_earned,
+        points_redeemed=points_redeemed,
         payment_method=payment_method,
         payment_status="paid" if payment_method == "card" else "pending",
         status="Received"
@@ -294,3 +327,27 @@ def reorder_api(order_id: int, db: Session = Depends(get_db)):
         })
 
     return {"success": True, "cart": new_cart, "count": len(new_cart)}
+
+
+# ----------------- PRINTABLE RECEIPT & INVOICE -----------------
+
+@router.get("/orders/{order_id}/receipt", response_class=HTMLResponse)
+def order_receipt_page(
+    request: Request,
+    order_id: int,
+    db: Session = Depends(get_db)
+):
+    """Printable invoice & receipt with QR code verification."""
+    user = get_current_user_optional(request, db)
+    order = db.query(Order).filter_by(id=order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    return templates.TemplateResponse(
+        "orders/receipt.html",
+        {
+            "request": request,
+            "order": order,
+            "user": user
+        }
+    )

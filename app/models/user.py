@@ -13,12 +13,21 @@ class User(Base):
     phone = Column(String(30), nullable=True)
     address = Column(String(255), nullable=True)
     role = Column(String(20), default="customer", nullable=False)  # 'customer', 'staff', 'admin'
+    loyalty_points = Column(Integer, default=100, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
     orders = relationship("Order", back_populates="user", cascade="all, delete-orphan")
     reviews = relationship("Review", back_populates="user", cascade="all, delete-orphan")
+
+    def loyalty_tier(self) -> str:
+        pts = self.loyalty_points or 0
+        if pts >= 500:
+            return "Gold Pizzaiolo VIP"
+        elif pts >= 200:
+            return "Silver Artisan"
+        return "Bronze Member"
 
     def is_admin(self) -> bool:
         return self.role == "admin"

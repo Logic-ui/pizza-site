@@ -42,22 +42,46 @@
           <strong>{{ order.customer_name }}</strong>
         </div>
         <div class="success-details-row">
+          <span style="color: var(--text-muted);">Fulfillment</span>
+          <strong style="text-transform: uppercase;">
+            {{ '🏬 Store Pickup' if order.order_type == 'pickup' else '🛵 Home Delivery' }}
+          </strong>
+        </div>
+        <div class="success-details-row">
           <span style="color: var(--text-muted);">Confirmation Sent To</span>
           <strong>{{ order.customer_email }}</strong>
         </div>
         <div class="success-details-row">
-          <span style="color: var(--text-muted);">Delivery Address</span>
+          <span style="color: var(--text-muted);">{{ 'Pickup Location' if order.order_type == 'pickup' else 'Delivery Address' }}</span>
           <strong style="text-align: right; max-width: 250px;">{{ order.address }}</strong>
         </div>
+        {% if order.tip_amount > 0 %}
+          <div class="success-details-row">
+            <span style="color: var(--text-muted);">Driver Tip</span>
+            <strong>${{ '%.2f'|format(order.tip_amount) }}</strong>
+          </div>
+        {% endif %}
+        {% if order.points_earned > 0 %}
+          <div class="success-details-row" style="color: #C05621; font-weight: 700;">
+            <span>Crust Points Earned</span>
+            <span>+{{ order.points_earned }} pts 🪙</span>
+          </div>
+        {% endif %}
         <div class="success-details-row" style="font-size: 1.15rem; padding-top: 0.85rem; border-top: 2px dashed var(--border-color); margin-top: 0.5rem;">
           <span>Total Paid / Due</span>
           <strong style="color: var(--primary);">${{ '%.2f'|format(order.total) }}</strong>
         </div>
       </div>
 
-      <div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin-top: 2rem;">
-        <a class="btn btn-primary btn-lg" href="/">
-          <span>🍕</span> Order More Pizzas
+      <div style="display: flex; flex-wrap: wrap; gap: 0.85rem; justify-content: center; margin-top: 2rem;">
+        <a class="btn btn-primary btn-lg" href="/orders/{{ order.id }}">
+          <span>🛵</span> Track Order Live
+        </a>
+        <a class="btn btn-secondary btn-lg" href="/orders/{{ order.id }}/receipt" target="_blank">
+          <span>🖨️</span> Print Receipt
+        </a>
+        <a class="btn btn-secondary btn-lg" href="/">
+          <span>🍕</span> Back to Menu
         </a>
       </div>
     </div>

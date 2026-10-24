@@ -2367,3 +2367,289 @@ h1, h2, h3, h4, h5, h6 {
     max-width: 100%;
   }
 }
+
+/* ==========================================================================
+   INTERACTIVE VISUAL PIZZA BUILDER
+   ========================================================================== */
+.pizza-visual-builder-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem 0 2rem;
+  background: radial-gradient(circle, var(--bg-subtle) 0%, #FFFFFF 70%);
+  border-radius: var(--radius-lg);
+  margin-bottom: 1.75rem;
+  border: 1px dashed var(--border-color);
+  position: relative;
+  overflow: hidden;
+}
+
+.pizza-canvas-disk {
+  width: 220px;
+  height: 220px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+}
+
+.pizza-canvas-disk.scale-small {
+  transform: scale(0.85);
+}
+
+.pizza-canvas-disk.scale-regular {
+  transform: scale(1.0);
+}
+
+.pizza-canvas-disk.scale-large {
+  transform: scale(1.15);
+}
+
+/* Crust Rim Layer */
+.pizza-crust-layer {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #E29A4D 0%, #C67828 65%, #8C470E 100%);
+  box-shadow: inset 0 3px 6px rgba(255, 255, 255, 0.4), 0 8px 20px rgba(140, 71, 14, 0.3);
+  border: 4px solid #B0641B;
+  transition: all 0.3s ease;
+}
+
+.pizza-crust-layer.crust-stuffed {
+  border-color: #F59F00;
+  box-shadow: 0 0 16px rgba(245, 159, 0, 0.45);
+}
+
+/* Sauce Layer */
+.pizza-sauce-layer {
+  position: absolute;
+  inset: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #D32F2F 0%, #B71C1C 70%, #8B0000 100%);
+}
+
+/* Melted Mozzarella Layer */
+.pizza-cheese-layer {
+  position: absolute;
+  inset: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 45% 45%, #FFF8E1 0%, #FFE082 40%, #FFCA28 85%, #E0A800 100%);
+  opacity: 0.95;
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.6);
+}
+
+/* Toppings Layer */
+.pizza-toppings-layer {
+  position: absolute;
+  inset: 22px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.topping-graphic-group {
+  position: absolute;
+  inset: 0;
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Pepperoni Slices */
+.p-slice {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #C0392B 0%, #962D22 70%, #6E2C00 100%);
+  border: 1.5px solid #78281F;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.p1 { top: 12%; left: 38%; }
+.p2 { top: 32%; left: 16%; }
+.p3 { top: 34%; right: 18%; }
+.p4 { bottom: 20%; left: 24%; }
+.p5 { bottom: 20%; right: 26%; }
+.p6 { top: 48%; left: 42%; }
+.p7 { top: 62%; left: 40%; }
+
+/* Basil Leaves */
+.b-leaf {
+  position: absolute;
+  font-size: 1.35rem;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+  transform: rotate(15deg);
+}
+
+.b1 { top: 22%; left: 46%; transform: rotate(20deg); }
+.b2 { top: 52%; left: 22%; transform: rotate(-35deg); }
+.b3 { top: 46%; right: 25%; transform: rotate(45deg); }
+.b4 { bottom: 15%; left: 42%; transform: rotate(-10deg); }
+.b5 { top: 26%; left: 24%; transform: rotate(80deg); }
+
+/* Wild Mushrooms */
+.m-piece {
+  position: absolute;
+  font-size: 1.25rem;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
+}
+
+.m1 { top: 20%; left: 32%; }
+.m2 { top: 58%; left: 34%; }
+.m3 { top: 26%; right: 28%; }
+.m4 { bottom: 28%; right: 30%; }
+.m5 { top: 44%; left: 48%; }
+
+/* Calabrian Chilies */
+.c-chili {
+  position: absolute;
+  font-size: 1.2rem;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25));
+}
+
+.c1 { top: 38%; left: 30%; transform: rotate(-25deg); }
+.c2 { top: 22%; right: 35%; transform: rotate(30deg); }
+.c3 { bottom: 26%; left: 45%; transform: rotate(15deg); }
+.c4 { top: 55%; right: 22%; transform: rotate(-45deg); }
+
+/* Olives */
+.o-ring {
+  position: absolute;
+  font-size: 1.15rem;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+}
+
+.o1 { top: 16%; left: 42%; }
+.o2 { top: 45%; left: 24%; }
+.o3 { top: 42%; right: 30%; }
+.o4 { bottom: 24%; left: 40%; }
+
+/* Extra Cheese Melt Glow */
+.extra-cheese-melt-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 235, 59, 0.45) 0%, rgba(255, 193, 7, 0.25) 80%);
+  mix-blend-mode: color-burn;
+}
+
+/* Truffle Oil Shimmer */
+.truffle-oil-shimmer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(20, 18, 16, 0.85);
+  color: #FFA800;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+/* Live Visual Badge underneath */
+.visual-pizza-badge {
+  position: absolute;
+  bottom: -14px;
+  background: rgba(20, 18, 16, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #FFFFFF;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.35rem 0.95rem;
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
+  white-space: nowrap;
+  z-index: 10;
+}
+
+/* ==========================================================================
+   SEGMENTED CONTROL (DELIVERY VS PICKUP)
+   ========================================================================== */
+.segmented-control {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-full);
+  padding: 4px;
+  border: 1.5px solid var(--border-color);
+  gap: 4px;
+}
+
+.segment-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-full);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  user-select: none;
+}
+
+.segment-btn:hover {
+  color: var(--text-main);
+}
+
+.segment-btn.active {
+  background: #FFFFFF;
+  color: var(--text-main);
+  box-shadow: var(--shadow-sm);
+}
+
+.segment-btn.active .seg-icon {
+  transform: scale(1.12);
+}
+
+.seg-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  background: var(--secondary-soft);
+  color: var(--secondary);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+}
+
+/* ==========================================================================
+   DRIVER TIP SELECTOR
+   ========================================================================== */
+.tip-pills-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.35rem;
+}
+
+.tip-btn {
+  padding: 0.55rem 0.25rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: var(--bg-subtle);
+  color: var(--text-body);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  text-align: center;
+}
+
+.tip-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.tip-btn.active {
+  background: var(--gradient-fire);
+  color: #FFFFFF;
+  border-color: transparent;
+  box-shadow: var(--shadow-fire);
+}

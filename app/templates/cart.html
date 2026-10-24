@@ -84,7 +84,31 @@
 
   <!-- Right Column: Order Summary & Checkout Form -->
   <div class="checkout-card" id="checkout-card">
-    <h2 style="font-size: 1.35rem; margin-bottom: 1.25rem;">Delivery & Checkout</h2>
+    <h2 style="font-size: 1.35rem; margin-bottom: 1rem;">Order & Checkout</h2>
+
+    <!-- FULFILLMENT TOGGLE: DELIVERY VS PICKUP -->
+    <div class="fulfillment-toggle-wrap" style="margin-bottom: 1.5rem;">
+      <div class="segmented-control">
+        <label class="segment-btn active" id="seg-delivery-btn" onclick="setFulfillmentMode('delivery')">
+          <input type="radio" name="ui_fulfillment" value="delivery" checked style="display: none;" />
+          <span class="seg-icon">🛵</span>
+          <span>Delivery</span>
+        </label>
+        <label class="segment-btn" id="seg-pickup-btn" onclick="setFulfillmentMode('pickup')">
+          <input type="radio" name="ui_fulfillment" value="pickup" style="display: none;" />
+          <span class="seg-icon">🏬</span>
+          <span>Store Pickup</span>
+          <span class="seg-badge">FREE</span>
+        </label>
+      </div>
+
+      <!-- Store Pickup Info Banner (shown only when pickup is selected) -->
+      <div id="pickup-info-card" class="pickup-info-card" style="display: none; margin-top: 0.85rem; padding: 0.85rem 1rem; background: var(--bg-subtle); border-radius: var(--radius-sm); border: 1.5px dashed var(--border-color); font-size: 0.86rem;">
+        <div style="font-weight: 700; color: var(--text-main); margin-bottom: 2px;">📍 Crust & Flame Artisan Kitchen</div>
+        <div style="color: var(--text-muted);">142 Artisan Boulevard, Food District</div>
+        <div style="color: var(--secondary); font-weight: 700; margin-top: 4px;">⏱️ Ready in 15–20 minutes &middot; No delivery fee!</div>
+      </div>
+    </div>
 
     <!-- Price Breakdown -->
     <div class="summary-rows">
@@ -98,33 +122,100 @@
         <span>-$<span id="discount-amount">0.00</span></span>
       </div>
 
+      <div class="summary-row" id="points-discount-row" style="display: none; color: var(--secondary); font-weight: 700;">
+        <span>Loyalty Reward (100 pts)</span>
+        <span>-$<span id="points-discount-amount">5.00</span></span>
+      </div>
+
       <div class="summary-row">
         <span>Estimated Tax (8%)</span>
         <span>$<span id="tax-amount">0.00</span></span>
       </div>
 
       <div class="summary-row">
-        <span>Express Delivery</span>
+        <span id="delivery-label">Express Delivery</span>
         <span id="delivery-fee-display" style="font-weight: 700;">$3.50</span>
+      </div>
+
+      <div class="summary-row" id="tip-row" style="display: none;">
+        <span>Driver Tip</span>
+        <span>$<span id="tip-amount-display">0.00</span></span>
       </div>
 
       <div class="summary-row total-row">
         <span>Total Amount</span>
         <span style="color: var(--primary);">$<span id="total">0.00</span></span>
       </div>
+
+      <div class="summary-row" style="font-size: 0.82rem; color: #C05621; font-weight: 700; padding-top: 4px;">
+        <span>Crust Points to Earn:</span>
+        <span id="points-earned-display">+0 pts 🪙</span>
+      </div>
     </div>
+
+    <!-- DRIVER TIP SELECTOR (Only shown in delivery mode) -->
+    <div id="tip-section" style="margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border-color);">
+      <label class="form-label" style="font-size: 0.88rem; display: flex; justify-content: space-between;">
+        <span>💖 Driver Courtesy Tip</span>
+        <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: normal;">100% goes to driver</span>
+      </label>
+      <div class="tip-pills-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.35rem; margin-top: 0.45rem;">
+        <button type="button" class="tip-btn active" data-tip="0" onclick="selectTip(0, this)">No Tip</button>
+        <button type="button" class="tip-btn" data-tip="10" onclick="selectTip(10, this)">10%</button>
+        <button type="button" class="tip-btn" data-tip="15" onclick="selectTip(15, this)">15%</button>
+        <button type="button" class="tip-btn" data-tip="20" onclick="selectTip(20, this)">20%</button>
+        <button type="button" class="tip-btn" data-tip="custom" onclick="selectCustomTip(this)">Other</button>
+      </div>
+      <div id="custom-tip-wrap" style="display: none; margin-top: 0.5rem;">
+        <input
+          type="number"
+          id="custom-tip-input"
+          class="form-control"
+          placeholder="Custom tip amount ($)"
+          step="0.50"
+          min="0"
+          oninput="updateCustomTip(this.value)"
+          style="padding: 0.5rem 0.85rem;"
+        />
+      </div>
+    </div>
+
+    <!-- LOYALTY REWARDS REDEMPTION -->
+    {% set u = user or (request.state.user if request.state.user is defined else None) %}
+    {% if u %}
+      <div class="loyalty-box" style="margin-bottom: 1.5rem; padding: 1rem; background: #FFF9F0; border-radius: var(--radius-sm); border: 1.5px solid #FBD38D;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 1.25rem;">🪙</span>
+            <div>
+              <div style="font-weight: 700; font-size: 0.9rem; color: #7B341E;">Crust Points: {{ u.loyalty_points or 0 }}</div>
+              <div style="font-size: 0.76rem; color: #9C4221;">Tier: {{ u.loyalty_tier() }}</div>
+            </div>
+          </div>
+          {% if (u.loyalty_points or 0) >= 100 %}
+            <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-size: 0.88rem; font-weight: 700; color: #C05621;">
+              <input type="checkbox" id="redeem-points-cb" onchange="toggleRedeemPoints(this.checked)" />
+              <span>Redeem 100 pts ($5 OFF)</span>
+            </label>
+          {% else %}
+            <span style="font-size: 0.78rem; color: #9C4221; font-weight: 600;">(100 pts needed for $5 OFF)</span>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
 
     <!-- Order Submission Form -->
     <form id="order-form" method="post" action="/order" novalidate>
       <input type="hidden" name="coupon_code" id="hidden-coupon-code" value="" />
+      <input type="hidden" name="order_type" id="hidden-order-type" value="delivery" />
+      <input type="hidden" name="tip_amount" id="hidden-tip-amount" value="0.00" />
+      <input type="hidden" name="redeem_points" id="hidden-redeem-points" value="false" />
 
-      {% if not user and not (request.state.user is defined and request.state.user) %}
+      {% if not u %}
         <div style="background: var(--bg-subtle); padding: 0.75rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem; font-size: 0.88rem;">
-          Have an account? <a href="/auth/login?next=/cart" style="color: var(--primary); font-weight: 700;">Sign in</a> for 1-click checkout.
+          Have an account? <a href="/auth/login?next=/cart" style="color: var(--primary); font-weight: 700;">Sign in</a> to earn & redeem loyalty points.
         </div>
       {% endif %}
-
-      {% set u = user or (request.state.user if request.state.user is defined else None) %}
 
       <div class="form-group">
         <label class="form-label" for="customer_name">
@@ -153,7 +244,7 @@
           placeholder="e.g. maria@example.com"
           required
         />
-        <div class="form-help">Order confirmation & tracking link sent here.</div>
+        <div class="form-help">Receipt & order confirmation sent here.</div>
       </div>
 
       <div class="form-group">
@@ -171,7 +262,8 @@
         />
       </div>
 
-      <div class="form-group">
+      <!-- Address Group (Hidden when Store Pickup is selected) -->
+      <div class="form-group" id="delivery-address-group">
         <label class="form-label" for="address">
           Delivery Address <span class="required">*</span>
         </label>
@@ -185,8 +277,8 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="delivery_notes">
-          Driver Notes / Instructions (Optional)
+        <label class="form-label" for="delivery_notes" id="notes-label">
+          Delivery Notes / Instructions (Optional)
         </label>
         <input
           id="delivery_notes"
@@ -202,7 +294,7 @@
         <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.35rem;">
           <label style="display: flex; align-items: center; gap: 0.65rem; padding: 0.65rem 0.85rem; border: 1.5px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer;">
             <input type="radio" name="payment_method" value="cod" checked />
-            <span style="font-weight: 600; font-size: 0.92rem;">💵 Cash on Delivery (COD)</span>
+            <span style="font-weight: 600; font-size: 0.92rem;">💵 Cash on Delivery / Pickup</span>
           </label>
           <label style="display: flex; align-items: center; gap: 0.65rem; padding: 0.65rem 0.85rem; border: 1.5px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer;">
             <input type="radio" name="payment_method" value="card" />
@@ -217,7 +309,7 @@
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
           <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
         </svg>
-        <span>Place Order Now</span>
+        <span id="submit-order-text">Place Delivery Order Now</span>
       </button>
 
       <p style="text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.85rem;">

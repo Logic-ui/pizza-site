@@ -5,10 +5,14 @@
 {% block content %}
 <div style="max-width: 820px; margin: 1.5rem auto 3rem;">
   <!-- Header -->
-  <div style="text-align: center; margin-bottom: 2.5rem;">
-    <a href="/profile" class="btn btn-sm btn-secondary" style="margin-bottom: 1rem;">
-      &larr; Back to Order History
-    </a>
+    <div style="display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1rem;">
+      <a href="/profile" class="btn btn-sm btn-secondary">
+        &larr; Order History
+      </a>
+      <a href="/orders/{{ order.id }}/receipt" target="_blank" class="btn btn-sm btn-secondary">
+        <span>🖨️</span> View & Print Receipt
+      </a>
+    </div>
     <div class="section-tag">
       <span>🛵</span> Live Order Tracking
     </div>

@@ -23,10 +23,16 @@ class Order(Base):
     tax = Column(Float, default=0.0)
     delivery_fee = Column(Float, default=0.0)
     discount = Column(Float, default=0.0)
+    tip_amount = Column(Float, default=0.0)
     total = Column(Float, default=0.0)
     coupon_code = Column(String(50), nullable=True)
     
+    # Loyalty & Rewards
+    points_earned = Column(Integer, default=0)
+    points_redeemed = Column(Integer, default=0)
+    
     # Order & Payment States
+    order_type = Column(String(20), default="delivery")  # 'delivery' or 'pickup'
     payment_method = Column(String(30), default="cod")  # 'cod', 'card', 'online'
     payment_status = Column(String(30), default="pending")  # 'pending', 'paid', 'refunded'
     status = Column(String(50), default="Received")  # 'Received', 'Preparing', 'Out for Delivery', 'Delivered', 'Cancelled'
