@@ -21,7 +21,10 @@ router = APIRouter(prefix="/admin", tags=["Admin Dashboard"])
 BASE_DIR = Path(__file__).resolve().parent.parent
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 UPLOAD_DIR = BASE_DIR / "static" / "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+try:
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+except Exception:
+    pass
 
 # ----------------- ADMIN DASHBOARD & ANALYTICS -----------------
 
@@ -179,8 +182,11 @@ def create_menu_item(
     if image and image.filename:
         filename = os.path.basename(image.filename)
         filepath = UPLOAD_DIR / filename
-        with open(filepath, "wb") as buffer:
-            shutil.copyfileobj(image.file, buffer)
+        try:
+            with open(filepath, "wb") as buffer:
+                shutil.copyfileobj(image.file, buffer)
+        except Exception as e:
+            print(f"Warning: Could not save uploaded image to disk: {e}")
 
     slug = name.lower().replace(" ", "-").replace("'", "")
     item = MenuItem(
@@ -248,9 +254,12 @@ def update_menu_item(
     if image and image.filename:
         filename = os.path.basename(image.filename)
         filepath = UPLOAD_DIR / filename
-        with open(filepath, "wb") as buffer:
-            shutil.copyfileobj(image.file, buffer)
-        item.image_filename = filename
+        try:
+            with open(filepath, "wb") as buffer:
+                shutil.copyfileobj(image.file, buffer)
+            item.image_filename = filename
+        except Exception as e:
+            print(f"Warning: Could not save uploaded image to disk: {e}")
 
     db.commit()
     return RedirectResponse(url="/admin/menu", status_code=303)

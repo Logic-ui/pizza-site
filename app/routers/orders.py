@@ -117,7 +117,12 @@ async def create_order(
         # Toppings price modifier
         validated_toppings = []
         for top in toppings_data:
-            tid = top.get("topping_id") or top.get("id")
+            if isinstance(top, dict):
+                tid = top.get("topping_id") or top.get("id")
+            elif isinstance(top, (int, str)):
+                tid = top
+            else:
+                tid = None
             if tid:
                 top_obj = db.query(Topping).filter_by(id=int(tid)).first()
                 if top_obj:

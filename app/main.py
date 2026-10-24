@@ -31,22 +31,31 @@ templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 # Ensure uploads directory exists
 UPLOAD_DIR = BASE_DIR / "static" / "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+try:
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+except Exception:
+    pass
 
-# Run schema migrations and create any new DB tables
-auto_migrate()
-models.Base.metadata.create_all(bind=engine)
+# Run schema migrations and create any new DB tables safely
+try:
+    auto_migrate()
+    models.Base.metadata.create_all(bind=engine)
+except Exception as e:
+    print(f"Warning during schema setup: {e}")
 
 
 # ----------------- LIFECYCLE / STARTUP SEEDING -----------------
 @app.on_event("startup")
 def startup_event():
-    auto_migrate()
-    db = next(get_db())
     try:
-        seed_database(db)
-    finally:
-        db.close()
+        auto_migrate()
+        db = next(get_db())
+        try:
+            seed_database(db)
+        finally:
+            db.close()
+    except Exception as e:
+        print(f"Warning during startup seeding: {e}")
 
 
 # ----------------- MIDDLEWARE / USER CONTEXT -----------------
@@ -115,6 +124,16 @@ def cart_page(request: Request, db: Session = Depends(get_db)):
 
 
 # ----------------- LEGACY COMPATIBILITY REDIRECTS -----------------
+@app.get("/login", response_class=HTMLResponse)
+def shortcut_login(request: Request):
+    return RedirectResponse(url="/auth/login", status_code=status.HTTP_302_FOUND)
+
+
+@app.get("/register", response_class=HTMLResponse)
+def shortcut_register(request: Request):
+    return RedirectResponse(url="/auth/register", status_code=status.HTTP_302_FOUND)
+
+
 @app.get("/admin/pizzas", response_class=HTMLResponse)
 def legacy_admin_pizzas(request: Request):
     return RedirectResponse(url="/admin/menu", status_code=status.HTTP_302_FOUND)
