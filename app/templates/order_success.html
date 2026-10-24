@@ -1,12 +1,76 @@
-{% extends "base.html" %} {% block content %} {% if error %}
-<div class="alert alert-danger">{{ error }}</div>
-{% else %}
-<h1>Thanks! Order #{{ order.id }} placed</h1>
-<p>Total: ${{ '%.2f'|format(order.total) }}</p>
-<p>We will contact you at {{ order.customer_email }}</p>
-<a class="btn btn-primary" href="/">Back to menu</a>
-<script>
-  localStorage.removeItem("cart");
-  document.getElementById("cart-count").textContent = 0;
-</script>
-{% endif %} {% endblock %}
+{% extends "base.html" %}
+
+{% block title %}Order Confirmed | Crust & Flame{% endblock %}
+
+{% block content %}
+<div class="success-container">
+  {% if error %}
+    <div class="card success-card">
+      <div class="success-icon-wrap" style="background: #FFF5F5; color: #C92A2A;">
+        ⚠️
+      </div>
+      <h1 class="section-title" style="font-size: 1.75rem; color: #C92A2A;">Unable to Process Order</h1>
+      <p style="color: var(--text-muted); margin: 1rem 0 1.5rem;">
+        {{ error }}
+      </p>
+      <div style="display: flex; gap: 1rem; justify-content: center;">
+        <a class="btn btn-primary" href="/cart">Return to Cart</a>
+        <a class="btn btn-secondary" href="/">Back to Menu</a>
+      </div>
+    </div>
+  {% else %}
+    <div class="card success-card">
+      <div class="success-icon-wrap">
+        ✓
+      </div>
+
+      <span class="success-order-pill">Order #{{ order.id }} Confirmed</span>
+      
+      <h1 class="section-title" style="font-size: 2rem;">Grazie! Your Pizza is on the Way</h1>
+      
+      <p style="color: var(--text-muted); max-width: 480px; margin: 0.5rem auto 1.5rem;">
+        Our pizzaiolo has received your order and is firing up the wood oven. Get ready for artisanal perfection!
+      </p>
+
+      <div class="success-details">
+        <div class="success-details-row">
+          <span style="color: var(--text-muted);">Estimated Delivery</span>
+          <strong>30 &ndash; 40 Minutes</strong>
+        </div>
+        <div class="success-details-row">
+          <span style="color: var(--text-muted);">Recipient</span>
+          <strong>{{ order.customer_name }}</strong>
+        </div>
+        <div class="success-details-row">
+          <span style="color: var(--text-muted);">Confirmation Sent To</span>
+          <strong>{{ order.customer_email }}</strong>
+        </div>
+        <div class="success-details-row">
+          <span style="color: var(--text-muted);">Delivery Address</span>
+          <strong style="text-align: right; max-width: 250px;">{{ order.address }}</strong>
+        </div>
+        <div class="success-details-row" style="font-size: 1.15rem; padding-top: 0.85rem; border-top: 2px dashed var(--border-color); margin-top: 0.5rem;">
+          <span>Total Paid / Due</span>
+          <strong style="color: var(--primary);">${{ '%.2f'|format(order.total) }}</strong>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin-top: 2rem;">
+        <a class="btn btn-primary btn-lg" href="/">
+          <span>🍕</span> Order More Pizzas
+        </a>
+      </div>
+    </div>
+
+    <script>
+      // Clear cart storage and header count
+      localStorage.removeItem("cart");
+      window.cart = [];
+      const cartCountEl = document.getElementById("cart-count");
+      if (cartCountEl) cartCountEl.textContent = "0";
+      const mobileCountEl = document.getElementById("mobile-cart-count");
+      if (mobileCountEl) mobileCountEl.textContent = "0";
+    </script>
+  {% endif %}
+</div>
+{% endblock %}

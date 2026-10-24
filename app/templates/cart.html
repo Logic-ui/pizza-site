@@ -1,34 +1,144 @@
-{% extends "base.html" %} {% block content %}
-<h1>Your Cart</h1>
-<table class="table">
-  <thead>
-    <tr>
-      <th>Pizza</th>
-      <th>Qty</th>
-      <th>Unit</th>
-      <th>Line</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody id="cart-items"></tbody>
-</table>
-<p>Total: $<span id="total">0.00</span></p>
+{% extends "base.html" %}
 
-<h2>Checkout</h2>
-<form id="order-form" method="post" action="/order">
-  <div class="mb-3">
-    <label class="form-label">Name</label>
-    <input name="customer_name" class="form-control" required />
+{% block title %}Your Cart & Checkout | Crust & Flame{% endblock %}
+
+{% block content %}
+<div class="cart-page-header">
+  <div class="section-tag">
+    <span>🛒</span> Shopping Bag
   </div>
-  <div class="mb-3">
-    <label class="form-label">Email</label>
-    <input name="customer_email" type="email" class="form-control" required />
+  <h1 class="section-title">Review & Checkout</h1>
+  <p class="section-subtitle">
+    Review your selected artisanal pizzas and enter your delivery details.
+  </p>
+</div>
+
+<!-- Empty Cart State -->
+<div id="cart-empty-state" class="cart-card cart-empty-state" style="display: none;">
+  <div class="cart-empty-icon">🍕</div>
+  <h2 class="cart-empty-title">Your Cart is Currently Empty</h2>
+  <p class="cart-empty-desc">
+    Looks like you haven't added any delicious pizzas yet! Check out our wood-fired menu.
+  </p>
+  <a href="/#menu" class="btn btn-primary btn-lg">
+    <span>🔥</span> Explore Our Menu
+  </a>
+</div>
+
+<!-- Cart Layout (Grid: Table + Checkout) -->
+<div class="cart-layout" id="cart-main-layout">
+  <!-- Left Column: Items Table Card -->
+  <div class="cart-card" id="cart-table-wrapper">
+    <div class="cart-card-header">
+      <h2>Your Selected Items</h2>
+      <a href="/#menu" class="btn btn-sm btn-secondary">
+        <span>+</span> Add More Pizzas
+      </a>
+    </div>
+
+    <div class="table-responsive">
+      <table class="cart-table">
+        <thead>
+          <tr>
+            <th>Pizza</th>
+            <th>Quantity</th>
+            <th>Unit Price</th>
+            <th>Subtotal</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody id="cart-items">
+          <!-- Dynamically populated by main.js renderCart() -->
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+      <span style="font-size: 0.9rem; color: var(--text-muted);">
+        ✨ Freshly baked upon order confirmation
+      </span>
+      <button type="button" class="btn btn-sm btn-secondary" onclick="localStorage.removeItem('cart'); window.cart=[]; renderCart(); updateCartCount();">
+        Clear Cart
+      </button>
+    </div>
   </div>
-  <div class="mb-3">
-    <label class="form-label">Address</label>
-    <textarea name="address" class="form-control" required></textarea>
+
+  <!-- Right Column: Order Summary & Checkout Form -->
+  <div class="checkout-card" id="checkout-card">
+    <h2 style="font-size: 1.35rem; margin-bottom: 1.25rem;">Delivery & Checkout</h2>
+
+    <!-- Price Breakdown -->
+    <div class="summary-rows">
+      <div class="summary-row">
+        <span>Subtotal</span>
+        <span>$<span id="subtotal">0.00</span></span>
+      </div>
+      <div class="summary-row">
+        <span>Express Delivery</span>
+        <span style="color: var(--secondary); font-weight: 700;">FREE</span>
+      </div>
+      <div class="summary-row total-row">
+        <span>Total Amount</span>
+        <span>$<span id="total">0.00</span></span>
+      </div>
+    </div>
+
+    <!-- Order Submission Form -->
+    <form id="order-form" method="post" action="/order" novalidate>
+      <div class="form-group">
+        <label class="form-label" for="customer_name">
+          Full Name <span class="required">*</span>
+        </label>
+        <input
+          id="customer_name"
+          name="customer_name"
+          class="form-control"
+          placeholder="e.g. John Doe"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="customer_email">
+          Email Address <span class="required">*</span>
+        </label>
+        <input
+          id="customer_email"
+          name="customer_email"
+          type="email"
+          class="form-control"
+          placeholder="e.g. john@example.com"
+          required
+        />
+        <div class="form-help">We'll send order tracking & receipt to this email.</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="address">
+          Delivery Address <span class="required">*</span>
+        </label>
+        <textarea
+          id="address"
+          name="address"
+          class="form-control"
+          placeholder="Street address, apartment or suite number, city, postal code"
+          required
+        ></textarea>
+      </div>
+
+      <!-- Submit Button -->
+      <button class="btn btn-primary btn-lg" type="submit" style="width: 100%; margin-top: 0.5rem;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        <span>Place Order Now</span>
+      </button>
+
+      <p style="text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.85rem;">
+        🔒 Guaranteed secure checkout &middot; Pay with cash or card on delivery
+      </p>
+    </form>
   </div>
-  <!-- hidden cart field appended by JS before submit -->
-  <button class="btn btn-success" type="submit">Place Order</button>
-</form>
+</div>
 {% endblock %}

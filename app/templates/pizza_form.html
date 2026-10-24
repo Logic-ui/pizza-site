@@ -1,59 +1,117 @@
 {% extends "base.html" %}
 
+{% block title %}{{ "Edit Pizza" if pizza else "Add New Pizza" }} &middot; Admin | Crust & Flame{% endblock %}
+
 {% block content %}
-<h1>{{ pizza and "Edit Pizza" or "Add Pizza" }}</h1>
-
-<form
-  method="post"
-  enctype="multipart/form-data"
-  action="{{ pizza and '/admin/pizzas/edit/' ~ pizza.id or '/admin/pizzas/new' }}"
->
-  <div class="mb-3">
-    <label class="form-label">Name</label>
-    <input
-      class="form-control"
-      name="name"
-      value="{{ pizza and pizza.name or '' }}"
-      required
-    />
+<div style="max-width: 680px; margin: 0 auto;">
+  <div style="margin-bottom: 2rem;">
+    <a href="/admin/pizzas" class="btn btn-sm btn-secondary" style="margin-bottom: 1rem;">
+      &larr; Back to Pizza List
+    </a>
+    <div class="section-tag">
+      <span>⚙️</span> Admin Portal
+    </div>
+    <h1 class="section-title" style="font-size: 2rem;">
+      {{ "Edit Pizza: " ~ pizza.name if pizza else "Add New Pizza" }}
+    </h1>
+    <p class="section-subtitle">
+      {{ "Update the details, pricing, and photo for this pizza offering." if pizza else "Create a new handcrafted pizza to feature on the live menu." }}
+    </p>
   </div>
 
-  <div class="mb-3">
-    <label class="form-label">Description</label>
-    <textarea class="form-control" name="description">{{ pizza and pizza.description or '' }}</textarea>
-  </div>
+  <div class="admin-card">
+    <form
+      id="pizza-form"
+      method="post"
+      enctype="multipart/form-data"
+      action="{{ ('/admin/pizzas/edit/' ~ pizza.id) if pizza else '/admin/pizzas/new' }}"
+    >
+      <!-- Pizza Name -->
+      <div class="form-group">
+        <label class="form-label" for="pizza-name">
+          Pizza Name <span class="required">*</span>
+        </label>
+        <input
+          id="pizza-name"
+          class="form-control"
+          name="name"
+          value="{{ pizza.name if pizza else '' }}"
+          placeholder="e.g. Quattro Formaggi"
+          required
+        />
+      </div>
 
-  <div class="mb-3">
-    <label class="form-label">Price</label>
-    <input
-      type="number"
-      step="0.01"
-      class="form-control"
-      name="price"
-      value="{{ pizza and pizza.price or '' }}"
-      required
-    />
-  </div>
+      <!-- Description -->
+      <div class="form-group">
+        <label class="form-label" for="pizza-desc">
+          Description & Ingredients
+        </label>
+        <textarea
+          id="pizza-desc"
+          class="form-control"
+          name="description"
+          placeholder="e.g. Gorgonzola, fresh mozzarella, ricotta, parmesan, and roasted garlic olive oil"
+        >{{ pizza.description if pizza else '' }}</textarea>
+        <div class="form-help">Describe crust style, cheeses, sauces, and fresh toppings.</div>
+      </div>
 
-  <div class="mb-3">
-    <label class="form-label">Pizza Image</label>
-    <input
-      type="file"
-      name="image"
-      accept=".png,.jpg,.jpeg,.svg,.gif"
-      class="form-control"
-    />
-    {% if pizza %}
-      <p class="mt-2">Current Image:</p>
-      <img
-        src="{{ pizza.image_url() if pizza.image_filename else url_for('static', path='uploads/default_pizza.jpeg') }}"
-        alt="Pizza image"
-        style="max-height:120px; object-fit:cover;"
-      />
-    {% endif %}
-  </div>
+      <!-- Price -->
+      <div class="form-group">
+        <label class="form-label" for="pizza-price">
+          Price (USD) <span class="required">*</span>
+        </label>
+        <input
+          id="pizza-price"
+          type="number"
+          step="0.01"
+          min="0.01"
+          class="form-control"
+          name="price"
+          value="{{ '%.2f'|format(pizza.price) if pizza else '' }}"
+          placeholder="8.50"
+          required
+        />
+      </div>
 
-  <button type="submit" class="btn btn-primary">Save</button>
-  <a class="btn btn-secondary" href="/admin/pizzas">Cancel</a>
-</form>
+      <!-- Pizza Image -->
+      <div class="form-group">
+        <label class="form-label" for="pizza-image-input">
+          Pizza Image
+        </label>
+        <input
+          id="pizza-image-input"
+          type="file"
+          name="image"
+          accept=".png,.jpg,.jpeg,.svg,.gif,.webp"
+          class="form-control"
+        />
+        <div class="form-help">Accepted formats: JPG, PNG, WEBP. Square or 4:3 ratio works best.</div>
+
+        <!-- Live image preview container -->
+        <div id="image-preview-container" class="image-preview-box" style="margin-top: 1rem; {{ 'display: block;' if pizza else 'display: none;' }}">
+          <p style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">
+            {{ "Current Photo:" if pizza else "Selected Photo Preview:" }}
+          </p>
+          <img
+            id="pizza-image-preview"
+            src="{{ pizza.image_url() if (pizza and pizza.image_filename) else '/static/uploads/default_pizza.jpeg' }}"
+            alt="Pizza preview"
+            style="max-height: 160px; object-fit: cover; border-radius: var(--radius-sm);"
+          />
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div style="display: flex; gap: 1rem; align-items: center; margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color);">
+        <button type="submit" class="btn btn-primary btn-lg">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>{{ "Save Changes" if pizza else "Create Pizza" }}</span>
+        </button>
+        <a class="btn btn-secondary btn-lg" href="/admin/pizzas">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
 {% endblock %}
