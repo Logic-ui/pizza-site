@@ -208,8 +208,46 @@
     <form id="order-form" method="post" action="/order" novalidate>
       <input type="hidden" name="coupon_code" id="hidden-coupon-code" value="" />
       <input type="hidden" name="order_type" id="hidden-order-type" value="delivery" />
+      <input type="hidden" name="scheduled_time" id="hidden-scheduled-time" value="ASAP" />
       <input type="hidden" name="tip_amount" id="hidden-tip-amount" value="0.00" />
       <input type="hidden" name="redeem_points" id="hidden-redeem-points" value="false" />
+
+      <!-- SCHEDULED DELIVERY / TIMING SELECTOR -->
+      <div class="form-group" style="margin-bottom: 1.25rem;">
+        <label class="form-label">
+          ⏰ Delivery &amp; Pickup Timing
+        </label>
+        <div class="segmented-control" style="margin-bottom: 0.65rem;">
+          <label class="segment-btn active" id="time-asap-btn" onclick="setTimingMode('asap')">
+            <input type="radio" name="ui_timing_mode" value="asap" checked style="display: none;" />
+            <span>⚡ ASAP (30-45 mins)</span>
+          </label>
+          <label class="segment-btn" id="time-schedule-btn" onclick="setTimingMode('schedule')">
+            <input type="radio" name="ui_timing_mode" value="schedule" style="display: none;" />
+            <span>📅 Schedule for Later</span>
+          </label>
+        </div>
+
+        <div id="schedule-picker-wrap" style="display: none; background: var(--bg-subtle); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 0.5rem;">
+          <label class="form-label" style="font-size: 0.85rem; margin-bottom: 0.35rem;">Select Preferred Time Slot</label>
+          <select id="scheduled-time-select" class="form-control" onchange="updateScheduledTimeValue()">
+            <option value="Today at 06:00 PM">Today at 06:00 PM</option>
+            <option value="Today at 06:30 PM">Today at 06:30 PM</option>
+            <option value="Today at 07:00 PM" selected>Today at 07:00 PM</option>
+            <option value="Today at 07:30 PM">Today at 07:30 PM</option>
+            <option value="Today at 08:00 PM">Today at 08:00 PM</option>
+            <option value="Today at 08:30 PM">Today at 08:30 PM</option>
+            <option value="Today at 09:00 PM">Today at 09:00 PM</option>
+            <option value="Tomorrow at 12:30 PM">Tomorrow at 12:30 PM</option>
+            <option value="Tomorrow at 01:00 PM">Tomorrow at 01:00 PM</option>
+            <option value="Tomorrow at 07:00 PM">Tomorrow at 07:00 PM</option>
+            <option value="Tomorrow at 08:00 PM">Tomorrow at 08:00 PM</option>
+          </select>
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">
+            ✨ We bake your pizza fresh right before your requested time so it arrives piping hot!
+          </div>
+        </div>
+      </div>
 
       {% if not u %}
         <div style="background: var(--bg-subtle); padding: 0.75rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem; font-size: 0.88rem;">

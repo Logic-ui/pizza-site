@@ -236,3 +236,36 @@ def seed_database(db: Session):
         ]
         db.add_all(settings_data)
         db.commit()
+
+    # 8. Seed Sample Table Reservations
+    from ..models.reservation import Reservation
+    from datetime import date
+    if db.query(Reservation).count() == 0:
+        sample_res = [
+            Reservation(
+                customer_name="Sophia Loren",
+                customer_email="sophia@example.com",
+                customer_phone="555-7890",
+                reservation_date=date.today().isoformat(),
+                reservation_time="19:00",
+                party_size=4,
+                seating_area="Cozy Fireplace Patio",
+                occasion="Anniversary",
+                special_requests="Corner booth with wine cooler please.",
+                status="Confirmed"
+            ),
+            Reservation(
+                customer_name="Chef Alessandro",
+                customer_email="alessandro@example.com",
+                customer_phone="555-3211",
+                reservation_date=date.today().isoformat(),
+                reservation_time="20:30",
+                party_size=2,
+                seating_area="Chef's Pizza Bar",
+                occasion="Date Night",
+                special_requests="Front row view of the 900°F oven.",
+                status="Seated"
+            )
+        ]
+        db.add_all(sample_res)
+        db.commit()

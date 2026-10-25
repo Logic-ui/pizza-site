@@ -64,6 +64,7 @@ async def create_order(
     customer_phone: Optional[str] = Form(None),
     delivery_notes: Optional[str] = Form(None),
     order_type: str = Form("delivery"),
+    scheduled_time: Optional[str] = Form("ASAP"),
     tip_amount: float = Form(0.0),
     redeem_points: bool = Form(False),
     payment_method: str = Form("cod"),
@@ -95,6 +96,11 @@ async def create_order(
         crust_id = it.get("crust_id")
         instructions = it.get("special_instructions")
         toppings_data = it.get("toppings", [])
+        split_mode = it.get("split_mode", "whole")
+        sauce = it.get("sauce", "San Marzano Tomato")
+        cheese_style = it.get("cheese_style", "Fior di Latte")
+        half_left = it.get("half_left", [])
+        half_right = it.get("half_right", [])
 
         menu_item = db.query(MenuItem).filter_by(id=pid).first()
         if menu_item is None:
@@ -119,14 +125,19 @@ async def create_order(
         for top in toppings_data:
             if isinstance(top, dict):
                 tid = top.get("topping_id") or top.get("id")
+                pos = top.get("half", "whole")
             elif isinstance(top, (int, str)):
                 tid = top
+                pos = "whole"
             else:
                 tid = None
+                pos = "whole"
             if tid:
                 top_obj = db.query(Topping).filter_by(id=int(tid)).first()
                 if top_obj:
-                    unit_price += top_obj.price
+                    # Half topping counts as 50% price if split
+                    t_price = round(top_obj.price * 0.5, 2) if pos in ("left", "right") else top_obj.price
+                    unit_price += t_price
                     validated_toppings.append(top_obj)
 
         line_total = round(unit_price * qty, 2)
@@ -140,7 +151,12 @@ async def create_order(
             "unit_price": unit_price,
             "line_total": line_total,
             "instructions": instructions,
-            "toppings": validated_toppings
+            "toppings": validated_toppings,
+            "split_mode": split_mode,
+            "sauce": sauce,
+            "cheese_style": cheese_style,
+            "half_left_details": json.dumps(half_left) if half_left else None,
+            "half_right_details": json.dumps(half_right) if half_right else None,
         })
 
     if not validated_order_items:
@@ -203,6 +219,10 @@ async def create_order(
         address=order_address,
         delivery_notes=delivery_notes.strip() if delivery_notes else None,
         order_type=order_type_clean,
+        scheduled_time=scheduled_time.strip() if scheduled_time else "ASAP",
+        driver_name="Marco Rossi",
+        driver_phone="+1 (555) 234-8901",
+        driver_vehicle="Red Piaggio Vespa (FL-902)",
         subtotal=round(subtotal, 2),
         tax=tax,
         delivery_fee=delivery_fee,
@@ -232,7 +252,12 @@ async def create_order(
             price=it_data["unit_price"],
             unit_price=it_data["unit_price"],
             line_total=it_data["line_total"],
-            special_instructions=it_data["instructions"]
+            special_instructions=it_data["instructions"],
+            split_mode=it_data["split_mode"],
+            sauce=it_data["sauce"],
+            cheese_style=it_data["cheese_style"],
+            half_left_details=it_data["half_left_details"],
+            half_right_details=it_data["half_right_details"]
         )
         db.add(db_item)
         db.commit()

@@ -83,10 +83,92 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // ==========================================================================
-  // 4. PIZZA CUSTOMIZER MODAL ENGINE (HERO FEATURE)
+  // 4. PIZZA CUSTOMIZER MODAL ENGINE (HERO FEATURE: WHOLE & HALF-AND-HALF)
   // ==========================================================================
   window.activeModalPizza = null;
   window.modalItemQty = 1;
+  window.pizzaSplitMode = "whole"; // 'whole' or 'half_half'
+
+  window.setPizzaSplitMode = function (mode) {
+    window.pizzaSplitMode = mode;
+    const wholeBtn = document.getElementById("modal-mode-whole-btn");
+    const halfBtn = document.getElementById("modal-mode-half-btn");
+    const splitLine = document.getElementById("pizza-split-line");
+    const splitLabels = document.getElementById("pizza-split-labels");
+
+    if (mode === "half_half") {
+      if (wholeBtn) wholeBtn.classList.remove("active");
+      if (halfBtn) halfBtn.classList.add("active");
+      if (splitLine) splitLine.style.display = "block";
+      if (splitLabels) splitLabels.style.display = "flex";
+
+      // Show split controls on all checked toppings
+      document.querySelectorAll(".modal-topping-checkbox:checked").forEach((cb) => {
+        const ctrl = document.getElementById(`split-ctrl-${cb.value}`);
+        if (ctrl) ctrl.style.display = "flex";
+      });
+    } else {
+      if (halfBtn) halfBtn.classList.remove("active");
+      if (wholeBtn) wholeBtn.classList.add("active");
+      if (splitLine) splitLine.style.display = "none";
+      if (splitLabels) splitLabels.style.display = "none";
+
+      // Hide split controls
+      document.querySelectorAll(".topping-split-control").forEach((ctrl) => {
+        ctrl.style.display = "none";
+      });
+    }
+
+    recalculateModalPrice();
+  };
+
+  window.setToppingSplit = function (toppingId, pos, btn) {
+    const cb = document.getElementById(`topping-check-${toppingId}`);
+    if (cb) {
+      cb.setAttribute("data-half", pos);
+      // Ensure checkbox is checked if user clicks split
+      if (!cb.checked) {
+        cb.checked = true;
+      }
+    }
+
+    // Update active pill button
+    const ctrl = document.getElementById(`split-ctrl-${toppingId}`);
+    if (ctrl) {
+      ctrl.querySelectorAll(".split-pill-btn").forEach((b) => b.classList.remove("active"));
+      if (btn) btn.classList.add("active");
+    }
+
+    // Update topping price label
+    const priceTag = document.getElementById(`topping-price-tag-${toppingId}`);
+    if (cb && priceTag) {
+      const basePrice = Number(cb.getAttribute("data-price") || 0.0);
+      const isHalf = pos === "left" || pos === "right";
+      const displayPrice = isHalf ? basePrice * 0.5 : basePrice;
+      priceTag.textContent = `+$${displayPrice.toFixed(2)}${isHalf ? " (½)" : ""}`;
+    }
+
+    recalculateModalPrice();
+  };
+
+  window.onToppingCheckChange = function (toppingId) {
+    const cb = document.getElementById(`topping-check-${toppingId}`);
+    const ctrl = document.getElementById(`split-ctrl-${toppingId}`);
+    if (cb && ctrl) {
+      if (cb.checked && window.pizzaSplitMode === "half_half") {
+        ctrl.style.display = "flex";
+      } else {
+        ctrl.style.display = "none";
+        cb.setAttribute("data-half", "whole");
+        const wholeBtn = document.getElementById(`split-btn-whole-${toppingId}`);
+        if (wholeBtn) {
+          ctrl.querySelectorAll(".split-pill-btn").forEach((b) => b.classList.remove("active"));
+          wholeBtn.classList.add("active");
+        }
+      }
+    }
+    recalculateModalPrice();
+  };
 
   window.openCustomizationModal = function (id, name, basePrice, imageUrl, desc) {
     window.activeModalPizza = {
@@ -110,6 +192,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (qtyVal) qtyVal.textContent = "1";
     if (instructionsInput) instructionsInput.value = "";
 
+    // Reset split mode to Whole
+    setPizzaSplitMode("whole");
+
     // Reset size to Regular
     const regularRadio = document.querySelector('input[name="modal_size"][value="Regular"]');
     if (regularRadio) regularRadio.checked = true;
@@ -118,9 +203,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const firstCrust = document.querySelector('input[name="modal_crust"]');
     if (firstCrust) firstCrust.checked = true;
 
-    // Uncheck extra toppings
+    // Reset sauce & cheese to first options
+    const sauceSelect = document.getElementById("modal-sauce-select");
+    if (sauceSelect) sauceSelect.selectedIndex = 0;
+    const cheeseSelect = document.getElementById("modal-cheese-select");
+    if (cheeseSelect) cheeseSelect.selectedIndex = 0;
+
+    // Uncheck extra toppings & reset split data
     document.querySelectorAll(".modal-topping-checkbox").forEach((cb) => {
       cb.checked = false;
+      cb.setAttribute("data-half", "whole");
+    });
+    document.querySelectorAll(".topping-split-control").forEach((ctrl) => {
+      ctrl.style.display = "none";
     });
 
     recalculateModalPrice();
@@ -168,10 +263,37 @@ document.addEventListener("DOMContentLoaded", () => {
       crustName = selectedCrust.getAttribute("data-name") || crustName;
     }
 
-    // 3. Extra toppings
+    // 3. Sauce & Cheese modifiers
+    const sauceSelect = document.getElementById("modal-sauce-select");
+    let sauceName = "San Marzano Tomato";
+    if (sauceSelect) {
+      const opt = sauceSelect.options[sauceSelect.selectedIndex];
+      if (opt) {
+        sauceName = opt.value;
+        unitPrice += Number(opt.getAttribute("data-price") || 0.0);
+      }
+    }
+
+    const cheeseSelect = document.getElementById("modal-cheese-select");
+    let cheeseName = "Fior di Latte";
+    if (cheeseSelect) {
+      const opt = cheeseSelect.options[cheeseSelect.selectedIndex];
+      if (opt) {
+        cheeseName = opt.value;
+        unitPrice += Number(opt.getAttribute("data-price") || 0.0);
+      }
+    }
+
+    // 4. Extra toppings (50% price if left/right half in split mode)
     let toppingsCount = 0;
     document.querySelectorAll(".modal-topping-checkbox:checked").forEach((cb) => {
-      unitPrice += Number(cb.getAttribute("data-price") || 0.0);
+      const topPrice = Number(cb.getAttribute("data-price") || 0.0);
+      const half = cb.getAttribute("data-half") || "whole";
+      if (window.pizzaSplitMode === "half_half" && (half === "left" || half === "right")) {
+        unitPrice += Math.round((topPrice * 0.5) * 100) / 100;
+      } else {
+        unitPrice += topPrice;
+      }
       toppingsCount++;
     });
 
@@ -191,11 +313,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const summaryPill = document.getElementById("modal-summary-pill");
     if (summaryPill) {
+      const splitLabel = window.pizzaSplitMode === "half_half" ? "◐ Half & Half" : "● Whole";
       let topText = toppingsCount > 0 ? ` • +${toppingsCount} Topping${toppingsCount > 1 ? "s" : ""}` : "";
-      summaryPill.textContent = `${sizeName} • ${crustName}${topText}`;
+      summaryPill.textContent = `${sizeName} • ${splitLabel} • ${crustName}${topText}`;
     }
 
-    // 4. Update Interactive Visual Pizza Builder Layers
+    // 5. Update Interactive Visual Pizza Builder Layers
     const visualDisk = document.getElementById("pizza-visual-disk");
     const visualCrust = document.getElementById("visual-crust-layer");
     const visualBadge = document.getElementById("visual-pizza-badge");
@@ -215,25 +338,44 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // Dynamic Topping Graphic Groups
-    const checkedToppingNames = Array.from(document.querySelectorAll(".modal-topping-checkbox:checked"))
-      .map(cb => (cb.getAttribute("data-name") || "").toLowerCase());
+    // Dynamic Topping Graphic Groups with Half & Half clipping
+    const checkedToppingElements = Array.from(document.querySelectorAll(".modal-topping-checkbox:checked"));
+    const checkedToppingNames = checkedToppingElements.map(cb => (cb.getAttribute("data-name") || "").toLowerCase());
 
-    const toggleGroup = (id, condition) => {
+    const toggleGroup = (id, condition, half) => {
       const el = document.getElementById(id);
-      if (el) el.style.display = condition ? "block" : "none";
+      if (el) {
+        el.style.display = condition ? "block" : "none";
+        if (condition && window.pizzaSplitMode === "half_half") {
+          if (half === "left") {
+            el.style.clipPath = "polygon(0 0, 50% 0, 50% 100%, 0 100%)";
+          } else if (half === "right") {
+            el.style.clipPath = "polygon(50% 0, 100% 0, 100% 100%, 50% 100%)";
+          } else {
+            el.style.clipPath = "none";
+          }
+        } else if (el) {
+          el.style.clipPath = "none";
+        }
+      }
     };
 
-    toggleGroup("topping-viz-pepperoni", checkedToppingNames.some(n => n.includes("pepperoni") || n.includes("sausage") || n.includes("meat")));
-    toggleGroup("topping-viz-basil", checkedToppingNames.some(n => n.includes("basil") || n.includes("spinach") || n.includes("herb")));
-    toggleGroup("topping-viz-mushrooms", checkedToppingNames.some(n => n.includes("mushroom")));
-    toggleGroup("topping-viz-chilies", checkedToppingNames.some(n => n.includes("chili") || n.includes("spicy") || n.includes("jalapeno")));
-    toggleGroup("topping-viz-olives", checkedToppingNames.some(n => n.includes("olive")));
-    toggleGroup("topping-viz-cheese", checkedToppingNames.some(n => n.includes("mozzarella") || n.includes("parmesan") || n.includes("cheese")));
-    toggleGroup("topping-viz-truffle", checkedToppingNames.some(n => n.includes("truffle") || n.includes("oil")));
+    const getToppingHalf = (pattern) => {
+      const match = checkedToppingElements.find(cb => (cb.getAttribute("data-name") || "").toLowerCase().includes(pattern));
+      return match ? (match.getAttribute("data-half") || "whole") : "whole";
+    };
+
+    toggleGroup("topping-viz-pepperoni", checkedToppingNames.some(n => n.includes("pepperoni") || n.includes("sausage") || n.includes("meat")), getToppingHalf("pepperoni"));
+    toggleGroup("topping-viz-basil", checkedToppingNames.some(n => n.includes("basil") || n.includes("spinach") || n.includes("herb")), getToppingHalf("basil"));
+    toggleGroup("topping-viz-mushrooms", checkedToppingNames.some(n => n.includes("mushroom")), getToppingHalf("mushroom"));
+    toggleGroup("topping-viz-chilies", checkedToppingNames.some(n => n.includes("chili") || n.includes("spicy") || n.includes("jalapeno")), getToppingHalf("chili"));
+    toggleGroup("topping-viz-olives", checkedToppingNames.some(n => n.includes("olive")), getToppingHalf("olive"));
+    toggleGroup("topping-viz-cheese", checkedToppingNames.some(n => n.includes("mozzarella") || n.includes("parmesan") || n.includes("cheese")) || cheeseName.includes("Extra"), "whole");
+    toggleGroup("topping-viz-truffle", checkedToppingNames.some(n => n.includes("truffle") || n.includes("oil")), "whole");
 
     if (visualBadge) {
-      visualBadge.textContent = `🍕 ${sizeName} &middot; ${crustName}${toppingsCount > 0 ? ` &middot; +${toppingsCount} Topping${toppingsCount > 1 ? 's' : ''}` : ''}`;
+      const splitIndicator = window.pizzaSplitMode === "half_half" ? "◐ Half &amp; Half" : "● Whole";
+      visualBadge.innerHTML = `🍕 ${sizeName} &middot; ${splitIndicator} &middot; ${crustName}${toppingsCount > 0 ? ` &middot; +${toppingsCount} Topping${toppingsCount > 1 ? 's' : ''}` : ''}`;
     }
 
     return { unitPrice, totalPrice };
@@ -251,13 +393,35 @@ document.addEventListener("DOMContentLoaded", () => {
     const crust_id = crustRadio ? Number(crustRadio.value) : null;
     const crust_name = crustRadio ? crustRadio.getAttribute("data-name") : null;
 
+    const sauceSelect = document.getElementById("modal-sauce-select");
+    const sauce = sauceSelect ? sauceSelect.value : "San Marzano Tomato";
+
+    const cheeseSelect = document.getElementById("modal-cheese-select");
+    const cheese_style = cheeseSelect ? cheeseSelect.value : "Fior di Latte";
+
     const toppings = [];
+    const half_left = [];
+    const half_right = [];
+
     document.querySelectorAll(".modal-topping-checkbox:checked").forEach((cb) => {
+      const tid = Number(cb.value);
+      const tname = cb.getAttribute("data-name");
+      const tprice = Number(cb.getAttribute("data-price") || 0.0);
+      const half = cb.getAttribute("data-half") || "whole";
+
       toppings.push({
-        topping_id: Number(cb.value),
-        topping_name: cb.getAttribute("data-name"),
-        price: Number(cb.getAttribute("data-price") || 0.0)
+        topping_id: tid,
+        topping_name: tname,
+        price: tprice,
+        half: half
       });
+
+      if (half === "left") half_left.push(tname);
+      else if (half === "right") half_right.push(tname);
+      else {
+        half_left.push(tname);
+        half_right.push(tname);
+      }
     });
 
     const instructionsInput = document.getElementById("modal-special-instructions");
@@ -273,6 +437,11 @@ document.addEventListener("DOMContentLoaded", () => {
       size: size,
       crust_id: crust_id,
       crust_name: crust_name,
+      split_mode: window.pizzaSplitMode || "whole",
+      sauce: sauce,
+      cheese_style: cheese_style,
+      half_left: half_left,
+      half_right: half_right,
       toppings: toppings,
       special_instructions: special_instructions,
       is_customized: true
@@ -386,6 +555,39 @@ document.addEventListener("DOMContentLoaded", () => {
     renderCart();
   };
 
+  // Delivery & Pickup Timing Mode (ASAP vs Schedule for Later)
+  window.currentTimingMode = "asap";
+  window.setTimingMode = function (mode) {
+    window.currentTimingMode = mode;
+    const asapBtn = document.getElementById("time-asap-btn");
+    const schedBtn = document.getElementById("time-schedule-btn");
+    const pickerWrap = document.getElementById("schedule-picker-wrap");
+    const hiddenScheduled = document.getElementById("hidden-scheduled-time");
+    const schedSelect = document.getElementById("scheduled-time-select");
+
+    if (mode === "schedule") {
+      if (asapBtn) asapBtn.classList.remove("active");
+      if (schedBtn) schedBtn.classList.add("active");
+      if (pickerWrap) pickerWrap.style.display = "block";
+      if (hiddenScheduled && schedSelect) {
+        hiddenScheduled.value = schedSelect.value;
+      }
+    } else {
+      if (schedBtn) schedBtn.classList.remove("active");
+      if (asapBtn) asapBtn.classList.add("active");
+      if (pickerWrap) pickerWrap.style.display = "none";
+      if (hiddenScheduled) hiddenScheduled.value = "ASAP";
+    }
+  };
+
+  window.updateScheduledTimeValue = function () {
+    const hiddenScheduled = document.getElementById("hidden-scheduled-time");
+    const schedSelect = document.getElementById("scheduled-time-select");
+    if (hiddenScheduled && schedSelect) {
+      hiddenScheduled.value = schedSelect.value;
+    }
+  };
+
   // Driver Tip Selection
   window.selectTip = function (val, btn) {
     window.selectedTipType = Number(val);
@@ -470,9 +672,23 @@ document.addEventListener("DOMContentLoaded", () => {
       if (item.crust_name) {
         customTags += `<span class="cart-custom-tag">${item.crust_name}</span>`;
       }
-      if (item.toppings && item.toppings.length > 0) {
+      if (item.split_mode === "half_half") {
+        customTags += `<span class="cart-custom-tag" style="background: rgba(132, 94, 247, 0.2); color: #B197FC; font-weight: 700;">◐ Half &amp; Half</span>`;
+        if (item.half_left && item.half_left.length > 0) {
+          customTags += `<div style="font-size: 0.78rem; color: #1971C2; margin-top: 2px;">◀ Left Half: ${item.half_left.join(", ")}</div>`;
+        }
+        if (item.half_right && item.half_right.length > 0) {
+          customTags += `<div style="font-size: 0.78rem; color: #D9480F; margin-top: 2px;">▶ Right Half: ${item.half_right.join(", ")}</div>`;
+        }
+      } else if (item.toppings && item.toppings.length > 0) {
         const topNames = item.toppings.map((t) => t.topping_name).join(", ");
         customTags += `<div style="margin-top: 4px;"><span class="cart-custom-tag">+ ${topNames}</span></div>`;
+      }
+      if (item.sauce && item.sauce !== "San Marzano Tomato") {
+        customTags += `<span class="cart-custom-tag">Sauce: ${item.sauce}</span>`;
+      }
+      if (item.cheese_style && item.cheese_style !== "Fior di Latte") {
+        customTags += `<span class="cart-custom-tag">Cheese: ${item.cheese_style}</span>`;
       }
       if (item.special_instructions) {
         customTags += `<div style="font-size: 0.76rem; color: var(--text-light); font-style: italic; margin-top: 2px;">Note: "${item.special_instructions}"</div>`;
@@ -669,6 +885,63 @@ document.addEventListener("DOMContentLoaded", () => {
     filterMenuItems();
   };
 
+  // ==========================================================================
+  // 8B. WISHLIST & DIETARY FILTER SYSTEM
+  // ==========================================================================
+  try {
+    window.crustFavorites = JSON.parse(localStorage.getItem("crustflame_favorites") || "[]");
+    if (!Array.isArray(window.crustFavorites)) window.crustFavorites = [];
+  } catch (e) {
+    window.crustFavorites = [];
+  }
+
+  window.currentDietaryFilter = "all";
+
+  window.updateWishlistUI = function () {
+    document.querySelectorAll(".wishlist-btn").forEach((btn) => {
+      const idStr = btn.id.replace("fav-btn-", "");
+      const isFav = window.crustFavorites.includes(Number(idStr));
+      if (isFav) {
+        btn.classList.add("is-favorite");
+        btn.innerHTML = "&hearts;";
+        btn.style.color = "#E03131";
+      } else {
+        btn.classList.remove("is-favorite");
+        btn.innerHTML = "&#9825;";
+        btn.style.color = "";
+      }
+    });
+
+    const counter = document.getElementById("fav-counter");
+    if (counter) counter.textContent = window.crustFavorites.length;
+  };
+
+  window.toggleFavoriteItem = function (e, id, name) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const numId = Number(id);
+    const idx = window.crustFavorites.indexOf(numId);
+    if (idx >= 0) {
+      window.crustFavorites.splice(idx, 1);
+      window.showToast(`Removed <strong>${name}</strong> from favorites.`, "info");
+    } else {
+      window.crustFavorites.push(numId);
+      window.showToast(`Saved <strong>${name}</strong> to your favorites! ❤️`, "success");
+    }
+    localStorage.setItem("crustflame_favorites", JSON.stringify(window.crustFavorites));
+    updateWishlistUI();
+    filterMenuItems();
+  };
+
+  window.selectDietaryFilter = function (diet, btn) {
+    window.currentDietaryFilter = diet;
+    document.querySelectorAll(".dietary-pill").forEach((p) => p.classList.remove("active"));
+    if (btn) btn.classList.add("active");
+    filterMenuItems();
+  };
+
   window.filterMenuItems = function () {
     const searchInput = document.getElementById("menu-search-input");
     const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
@@ -692,12 +965,23 @@ document.addEventListener("DOMContentLoaded", () => {
       const cardCat = card.getAttribute("data-category") || "";
       const cardName = card.getAttribute("data-name") || "";
       const cardDesc = card.getAttribute("data-desc") || "";
+      const cardId = Number(card.getAttribute("data-id") || 0);
+      const isVeg = card.getAttribute("data-veg") === "true";
+      const isSpicy = card.getAttribute("data-spicy") === "true";
+      const isFeatured = card.getAttribute("data-featured") === "true";
+      const isFav = (window.crustFavorites || []).includes(cardId);
+
+      let matchesDiet = true;
+      if (window.currentDietaryFilter === "veg") matchesDiet = isVeg;
+      else if (window.currentDietaryFilter === "spicy") matchesDiet = isSpicy;
+      else if (window.currentDietaryFilter === "featured") matchesDiet = isFeatured;
+      else if (window.currentDietaryFilter === "favorites") matchesDiet = isFav;
 
       const matchesCat = selectedCategory === "all" || cardCat === selectedCategory;
       const matchesSearch =
         query === "" || cardName.includes(query) || cardDesc.includes(query);
 
-      if (matchesCat && matchesSearch) {
+      if (matchesCat && matchesSearch && matchesDiet) {
         card.style.display = "flex";
         visibleCount++;
       } else {
@@ -706,7 +990,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     if (resultsCountEl) {
-      if (query.length > 0) {
+      if (query.length > 0 || window.currentDietaryFilter !== "all") {
         resultsCountEl.style.display = "block";
         resultsCountEl.textContent = `Showing ${visibleCount} matching item${
           visibleCount === 1 ? "" : "s"
@@ -1048,4 +1332,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================================================
   updateCartCount();
   renderCart();
+  if (typeof window.updateWishlistUI === "function") {
+    window.updateWishlistUI();
+  }
 });

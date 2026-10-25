@@ -78,6 +78,11 @@
 
     <!-- Current Status Highlight Box -->
     <div style="background: var(--bg-subtle); border-radius: var(--radius-md); padding: 1.25rem; text-align: center; border: 1px solid var(--border-color);">
+      {% if order.scheduled_time and order.scheduled_time != 'ASAP' %}
+        <div style="display: inline-block; background: rgba(255, 179, 0, 0.15); color: #D97706; border: 1px solid rgba(255, 179, 0, 0.35); font-size: 0.82rem; font-weight: 800; padding: 0.25rem 0.85rem; border-radius: var(--radius-full); margin-bottom: 0.5rem;">
+          ⏰ Scheduled Delivery: {{ order.scheduled_time }}
+        </div>
+      {% endif %}
       <p style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 0.25rem;">
         Current Status
       </p>
@@ -94,6 +99,97 @@
     </div>
   </div>
 
+  <!-- LIVE ANIMATED GPS DRIVER DELIVERY RADAR MAP -->
+  {% if order.order_type == 'delivery' %}
+    <div class="cart-card" style="margin-bottom: 2rem; padding: 1.5rem; overflow: hidden;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div>
+          <span class="section-tag" style="margin-bottom: 0.25rem;"><span>📡</span> Live Delivery Radar</span>
+          <h3 style="font-size: 1.25rem; margin: 0;">Real-Time Courier Telemetry</h3>
+        </div>
+        <div style="display: flex; gap: 0.75rem; align-items: center;">
+          <span id="gps-eta-badge" style="background: var(--gradient-fire); color: #fff; font-weight: 800; font-size: 0.85rem; padding: 0.35rem 0.85rem; border-radius: var(--radius-full); box-shadow: 0 4px 12px rgba(224,49,49,0.3);">
+            {% if order.status == 'Delivered' %}Delivered Safe & Warm{% elif order.status == 'Out for Delivery' %}ETA: ~12-16 mins{% else %}Kitchen Baking (~25 mins){% endif %}
+          </span>
+          <span id="gps-distance-badge" style="background: var(--bg-subtle); border: 1px solid var(--border-color); font-weight: 700; font-size: 0.82rem; padding: 0.35rem 0.65rem; border-radius: var(--radius-full); color: var(--text-muted);">
+            {% if order.status == 'Delivered' %}0.0 miles{% elif order.status == 'Out for Delivery' %}1.4 miles away{% else %}At Pizzeria{% endif %}
+          </span>
+        </div>
+      </div>
+
+      <!-- Vector SVG Road Map Canvas -->
+      <div class="gps-map-container" style="position: relative; height: 260px; border-radius: var(--radius-md); overflow: hidden; background: #12161E; border: 1px solid var(--border-color);">
+        <svg width="100%" height="100%" viewBox="0 0 800 260" preserveAspectRatio="none" style="display: block;">
+          <!-- Map Background Grid Lines (Streets & Avenues) -->
+          <pattern id="street-grid" width="60" height="60" patternUnits="userSpaceOnUse">
+            <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1.5" />
+          </pattern>
+          <rect width="800" height="260" fill="url(#street-grid)" />
+
+          <!-- Secondary City Roads -->
+          <line x1="0" y1="130" x2="800" y2="130" stroke="rgba(255,255,255,0.08)" stroke-width="4" stroke-dasharray="8 6" />
+          <line x1="260" y1="0" x2="260" y2="260" stroke="rgba(255,255,255,0.06)" stroke-width="3" />
+          <line x1="540" y1="0" x2="540" y2="260" stroke="rgba(255,255,255,0.06)" stroke-width="3" />
+          
+          <!-- Park / River Aesthetic Curves -->
+          <path d="M 0 40 Q 200 90 400 40 T 800 60" fill="none" stroke="rgba(32, 201, 151, 0.12)" stroke-width="16" />
+
+          <!-- Main Delivery Arterial Route (Glowing Bezier Path) -->
+          <path id="delivery-route-glow" d="M 120 180 C 240 60, 480 220, 680 90" fill="none" stroke="rgba(255, 107, 74, 0.25)" stroke-width="10" stroke-linecap="round" />
+          <path id="delivery-route-core" d="M 120 180 C 240 60, 480 220, 680 90" fill="none" stroke="#FF6B4A" stroke-width="4" stroke-dasharray="10 8" stroke-linecap="round">
+            <animate attributeName="stroke-dashoffset" values="36;0" dur="1.2s" repeatCount="indefinite" />
+          </path>
+
+          <!-- Restaurant Pin: Crust & Flame Pizzeria -->
+          <g transform="translate(120, 180)">
+            <circle r="22" fill="rgba(224, 49, 49, 0.2)">
+              <animate attributeName="r" values="16;28;16" dur="2s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.8;0;0.8" dur="2s" repeatCount="indefinite" />
+            </circle>
+            <circle r="14" fill="#E03131" stroke="#fff" stroke-width="2.5" />
+            <text x="0" y="5" font-size="12" text-anchor="middle" fill="#fff" font-weight="bold">🍕</text>
+            <rect x="-65" y="18" width="130" height="22" rx="4" fill="rgba(0,0,0,0.75)" />
+            <text x="0" y="33" font-size="10" text-anchor="middle" fill="#fff" font-family="'Plus Jakarta Sans', sans-serif" font-weight="600">Crust &amp; Flame Oven</text>
+          </g>
+
+          <!-- Customer Home Pin -->
+          <g transform="translate(680, 90)">
+            <circle r="20" fill="rgba(32, 201, 151, 0.2)">
+              <animate attributeName="r" values="14;26;14" dur="2.2s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.8;0;0.8" dur="2.2s" repeatCount="indefinite" />
+            </circle>
+            <circle r="14" fill="#20C997" stroke="#fff" stroke-width="2.5" />
+            <text x="0" y="5" font-size="12" text-anchor="middle" fill="#fff" font-weight="bold">🏠</text>
+            <rect x="-55" y="-32" width="110" height="22" rx="4" fill="rgba(0,0,0,0.75)" />
+            <text x="0" y="-17" font-size="10" text-anchor="middle" fill="#fff" font-family="'Plus Jakarta Sans', sans-serif" font-weight="600">Your Address</text>
+          </g>
+
+          <!-- Animated Courier Scooter Icon -->
+          <g id="animated-scooter-marker" transform="translate(400, 140)">
+            <circle r="18" fill="rgba(255, 179, 0, 0.25)">
+              <animate attributeName="r" values="12;22;12" dur="1.5s" repeatCount="indefinite" />
+            </circle>
+            <circle r="15" fill="#FF922B" stroke="#fff" stroke-width="2.5" />
+            <text x="0" y="5" font-size="14" text-anchor="middle" fill="#fff">🛵</text>
+            <rect x="-45" y="18" width="90" height="18" rx="4" fill="#1C1917" />
+            <text x="0" y="31" font-size="9" text-anchor="middle" fill="#FFD43B" font-family="'Plus Jakarta Sans', sans-serif" font-weight="700">Marco (Courier)</text>
+          </g>
+        </svg>
+
+        <!-- Live Telemetry Overlay Card -->
+        <div style="position: absolute; bottom: 12px; left: 14px; background: rgba(22, 26, 32, 0.92); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 0.5rem 0.85rem; display: flex; align-items: center; gap: 0.75rem;">
+          <span style="display: flex; align-items: center; gap: 4px; font-size: 0.78rem; color: #ADB5BD;">
+            <span style="color: #20C997;">●</span> GPS Signal: <strong>Strong</strong>
+          </span>
+          <span style="color: rgba(255,255,255,0.2);">|</span>
+          <span style="font-size: 0.78rem; color: #CED4DA;">
+            Vehicle: <strong>Red Vespa (FL-902)</strong>
+          </span>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
   <!-- Receipt Breakdown & Delivery Details -->
   <div class="cart-layout">
     <!-- Left: Ordered Items -->
@@ -107,13 +203,37 @@
               <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
                 Size: {{ it.size }}
                 {% if it.crust %}&bull; Crust: {{ it.crust.name }}{% endif %}
+                {% if it.sauce %}&bull; Sauce: {{ it.sauce }}{% endif %}
+                {% if it.cheese_style %}&bull; Cheese: {{ it.cheese_style }}{% endif %}
               </div>
-              {% if it.toppings %}
+
+              <!-- Half & Half or Whole Toppings Display -->
+              {% if it.split_mode == 'half_half' %}
+                <div style="margin-top: 4px; font-size: 0.82rem;">
+                  <span style="background: rgba(132, 94, 247, 0.2); color: #B197FC; font-weight: 700; padding: 1px 6px; border-radius: 4px; font-size: 0.75rem;">Half &amp; Half</span>
+                  {% if it.half_left_details %}
+                    <div style="color: #1971C2; margin-top: 2px;">
+                      ◀ <strong>Left Half:</strong> {{ it.half_left_details|replace('"', '')|replace('[', '')|replace(']', '') }}
+                    </div>
+                  {% endif %}
+                  {% if it.half_right_details %}
+                    <div style="color: #D9480F; margin-top: 2px;">
+                      ▶ <strong>Right Half:</strong> {{ it.half_right_details|replace('"', '')|replace('[', '')|replace(']', '') }}
+                    </div>
+                  {% endif %}
+                </div>
+              {% elif it.toppings %}
                 <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
                   + Toppings: 
                   {% for t in it.toppings %}
                     {{ t.topping_name }}{% if not loop.last %}, {% endif %}
                   {% endfor %}
+                </div>
+              {% endif %}
+
+              {% if it.special_instructions %}
+                <div style="font-size: 0.8rem; color: #D9480F; margin-top: 2px; font-style: italic;">
+                  Note: "{{ it.special_instructions }}"
                 </div>
               {% endif %}
             </div>
@@ -133,6 +253,11 @@
         {% endif %}
         <div class="summary-row"><span>Tax (8%):</span> <span>${{ '%.2f'|format(order.tax) }}</span></div>
         <div class="summary-row"><span>Delivery Fee:</span> <span>${{ '%.2f'|format(order.delivery_fee) }}</span></div>
+        {% if order.tip_amount and order.tip_amount > 0 %}
+          <div class="summary-row" style="color: var(--accent);">
+            <span>Driver Tip:</span> <span>${{ '%.2f'|format(order.tip_amount) }}</span>
+          </div>
+        {% endif %}
         <div class="summary-row total-row">
           <span>Total:</span>
           <span style="color: var(--primary);">${{ '%.2f'|format(order.total) }}</span>
@@ -140,20 +265,48 @@
       </div>
     </div>
 
-    <!-- Right: Delivery Details -->
+    <!-- Right: Delivery Details & Courier Card -->
     <div class="checkout-card">
-      <h3 style="font-size: 1.15rem; margin-bottom: 1.25rem;">Delivery & Payment Info</h3>
+      <h3 style="font-size: 1.15rem; margin-bottom: 1.25rem;">Delivery &amp; Courier Info</h3>
       
+      {% if order.order_type == 'delivery' %}
+        <!-- Dedicated Driver Profile Card -->
+        <div style="background: var(--bg-subtle); border-radius: var(--radius-md); padding: 1.25rem; border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.85rem; margin-bottom: 0.75rem;">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--gradient-fire); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 4px 12px rgba(224,49,49,0.3);">
+              🛵
+            </div>
+            <div>
+              <strong style="font-size: 1rem; display: block;">{{ order.driver_name or 'Marco Rossi' }}</strong>
+              <div style="font-size: 0.78rem; color: var(--secondary); font-weight: 700;">
+                ★ 4.98 Rating &middot; Top Courier
+              </div>
+            </div>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0 0 0.85rem;">
+            Vehicle: <strong>{{ order.driver_vehicle or 'Red Piaggio Vespa (FL-902)' }}</strong>
+          </p>
+          <div style="display: flex; gap: 0.5rem;">
+            <a href="tel:{{ order.driver_phone or '555-0199' }}" class="btn btn-sm btn-secondary" style="flex: 1; justify-content: center; font-size: 0.82rem;">
+              <span>📞</span> Call Driver
+            </a>
+            <button type="button" class="btn btn-sm btn-secondary" style="flex: 1; justify-content: center; font-size: 0.82rem;" onclick="alert('Driver message prompt: Marco is safely navigating to your address!')">
+              <span>💬</span> Message
+            </button>
+          </div>
+        </div>
+      {% endif %}
+
       <div style="margin-bottom: 1.25rem;">
         <span style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Customer</span>
-        <p style="font-weight: 600; font-size: 0.95rem;">{{ order.customer_name }}</p>
-        <p style="font-size: 0.88rem; color: var(--text-muted);">{{ order.customer_email }}</p>
-        {% if order.customer_phone %}<p style="font-size: 0.88rem; color: var(--text-muted);">{{ order.customer_phone }}</p>{% endif %}
+        <p style="font-weight: 600; font-size: 0.95rem; margin: 2px 0 0;">{{ order.customer_name }}</p>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 2px 0 0;">{{ order.customer_email }}</p>
+        {% if order.customer_phone %}<p style="font-size: 0.85rem; color: var(--text-muted); margin: 2px 0 0;">{{ order.customer_phone }}</p>{% endif %}
       </div>
 
       <div style="margin-bottom: 1.25rem;">
         <span style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Delivery Address</span>
-        <p style="font-weight: 600; font-size: 0.95rem;">{{ order.address }}</p>
+        <p style="font-weight: 600; font-size: 0.95rem; margin: 2px 0 0;">{{ order.address }}</p>
         {% if order.delivery_notes %}
           <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Notes: {{ order.delivery_notes }}</p>
         {% endif %}
@@ -161,7 +314,7 @@
 
       <div style="margin-bottom: 1.5rem;">
         <span style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Payment</span>
-        <p style="font-weight: 600; font-size: 0.95rem; text-transform: uppercase;">
+        <p style="font-weight: 600; font-size: 0.95rem; text-transform: uppercase; margin: 2px 0 4px;">
           {{ 'Cash on Delivery (COD)' if order.payment_method == 'cod' else 'Card Payment' }}
         </p>
         <span style="display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: var(--radius-full); background: {{ 'var(--secondary-soft)' if order.payment_status == 'paid' else '#FFF4E6' }}; color: {{ 'var(--secondary)' if order.payment_status == 'paid' else '#D9480F' }};">
@@ -207,8 +360,36 @@
           }
         }
       }
+
+      // Animate GPS Scooter along route based on stage
+      const scooterMarker = document.getElementById("animated-scooter-marker");
+      const etaBadge = document.getElementById("gps-eta-badge");
+      const distBadge = document.getElementById("gps-distance-badge");
+
+      if (scooterMarker) {
+        if (status === "Received") {
+          scooterMarker.setAttribute("transform", "translate(120, 180)");
+          if (etaBadge) etaBadge.textContent = "Kitchen Queue (~30 mins)";
+          if (distBadge) distBadge.textContent = "At Pizzeria";
+        } else if (status === "Preparing") {
+          scooterMarker.setAttribute("transform", "translate(160, 160)");
+          if (etaBadge) etaBadge.textContent = "Baking in Oven (~20 mins)";
+          if (distBadge) distBadge.textContent = "Packing soon";
+        } else if (status === "Out for Delivery") {
+          scooterMarker.setAttribute("transform", "translate(460, 150)");
+          if (etaBadge) etaBadge.textContent = "ETA: ~8-12 mins";
+          if (distBadge) distBadge.textContent = "0.9 miles away";
+        } else if (status === "Delivered") {
+          scooterMarker.setAttribute("transform", "translate(680, 90)");
+          if (etaBadge) etaBadge.textContent = "Delivered Safe & Warm";
+          if (distBadge) distBadge.textContent = "Arrived";
+        }
+      }
     }
   }
+
+  // Initial update
+  updateStatusUI("{{ order.status }}");
 
   setInterval(async () => {
     try {

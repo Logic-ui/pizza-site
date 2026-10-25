@@ -44,12 +44,14 @@
             <ul class="nav-links">
               <li><a class="nav-link" href="/">Home</a></li>
               <li><a class="nav-link" href="/#menu">Menu</a></li>
+              <li><a class="nav-link" href="/reserve">Reserve Table</a></li>
               <li><a class="nav-link" href="/cart">Cart</a></li>
               {% if user or (request.state.user is defined and request.state.user) %}
                 {% set u = user or request.state.user %}
                 <li><a class="nav-link" href="/profile">My Orders</a></li>
                 {% if u.is_staff() %}
                   <li><a class="nav-link" href="/admin" style="color: var(--primary); font-weight: 700;">Admin</a></li>
+                  <li><a class="nav-link" href="/admin/kds" style="color: var(--accent); font-weight: 700;" target="_blank">KDS</a></li>
                 {% endif %}
               {% endif %}
             </ul>
@@ -144,6 +146,11 @@
             </a>
           </li>
           <li>
+            <a class="mobile-link" href="/reserve">
+              <span>🍷</span> Reserve Table
+            </a>
+          </li>
+          <li>
             <a class="mobile-link" href="/cart">
               <span>🛒</span> Your Cart (<span id="mobile-cart-count">0</span>)
             </a>
@@ -159,6 +166,16 @@
               <li>
                 <a class="mobile-link" href="/admin">
                   <span>⚙️</span> Admin Dashboard
+                </a>
+              </li>
+              <li>
+                <a class="mobile-link" href="/admin/kds">
+                  <span>🔥</span> Kitchen Display (KDS)
+                </a>
+              </li>
+              <li>
+                <a class="mobile-link" href="/admin/reservations">
+                  <span>🍷</span> Reservations Manager
                 </a>
               </li>
             {% endif %}

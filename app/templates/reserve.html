@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% block title %}Reserve a Table &middot; Crust & Flame Artisanal Pizzeria{% endblock %}
+
+{% block content %}
+<div class="cart-page-header">
+  <div class="section-tag">
+    <span>🍷</span> Dine-In Experience
+  </div>
+  <h1 class="section-title">Reserve Your Artisan Table</h1>
+  <p class="section-subtitle">
+    Immerse yourself in the aromas of oak wood-smoke, 48-hour sourdough pizzas blistered at 900°F, and warm Italian hospitality.
+  </p>
+</div>
+
+<div class="cart-layout" style="grid-template-columns: 1.6fr 1fr; align-items: start; gap: 2rem;">
+  <!-- Left: Booking Form -->
+  <div class="cart-card" style="padding: 2rem;">
+    <form method="post" action="/reserve" id="reservation-form">
+      <!-- STEP 1: DATE & TIME -->
+      <div style="margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+          <span style="background: var(--gradient-fire); color: #fff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem;">1</span>
+          <h3 style="font-size: 1.25rem; margin: 0;">Select Date & Time</h3>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+          <div class="form-group" style="margin: 0;">
+            <label class="form-label">Reservation Date</label>
+            <input
+              type="date"
+              name="reservation_date"
+              id="res-date-input"
+              class="form-control"
+              value="{{ today_str }}"
+              min="{{ today_str }}"
+              required
+              onchange="updateReservationSummary()"
+            />
+          </div>
+
+          <div class="form-group" style="margin: 0;">
+            <label class="form-label">Party Size</label>
+            <div style="display: flex; align-items: center; gap: 0.75rem; background: var(--bg-subtle); padding: 0.35rem 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+              <button type="button" class="btn btn-sm btn-secondary" style="padding: 4px 12px; font-weight: 700;" onclick="adjustPartySize(-1)">&minus;</button>
+              <span id="party-size-display" style="font-weight: 800; font-size: 1.15rem; min-width: 48px; text-align: center;">2 Guests</span>
+              <button type="button" class="btn btn-sm btn-secondary" style="padding: 4px 12px; font-weight: 700;" onclick="adjustPartySize(1)">&plus;</button>
+              <input type="hidden" name="party_size" id="res-party-size" value="2" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Time Slot Chips -->
+        <label class="form-label" style="margin-bottom: 0.5rem;">Available Seating Times</label>
+        <div class="time-slot-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 0.5rem;">
+          {% for slot in ['12:00 PM', '12:30 PM', '01:00 PM', '01:30 PM', '05:30 PM', '06:00 PM', '06:30 PM', '07:00 PM', '07:30 PM', '08:00 PM', '08:30 PM', '09:00 PM'] %}
+            <label class="time-slot-chip" style="cursor: pointer;">
+              <input
+                type="radio"
+                name="reservation_time"
+                value="{{ slot }}"
+                {% if slot == '07:00 PM' %}checked{% endif %}
+                style="display: none;"
+                onchange="updateReservationSummary()"
+              />
+              <span class="time-chip-inner" style="display: block; text-align: center; padding: 0.5rem 0.25rem; font-size: 0.85rem; font-weight: 600; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-subtle); transition: all 0.2s ease;">
+                {{ slot }}
+              </span>
+            </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- STEP 2: SEATING AREA -->
+      <div style="margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+          <span style="background: var(--gradient-fire); color: #fff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem;">2</span>
+          <h3 style="font-size: 1.25rem; margin: 0;">Choose Seating Ambience</h3>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem;">
+          <!-- Main Dining Room -->
+          <label class="seating-option-card" style="cursor: pointer;">
+            <input type="radio" name="seating_area" value="Main Dining Room" checked style="display: none;" onchange="updateReservationSummary()" />
+            <div class="seating-card-inner" style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; background: var(--bg-subtle); height: 100%; transition: all 0.2s ease;">
+              <div style="font-size: 1.4rem; margin-bottom: 0.25rem;">🏛️</div>
+              <strong style="display: block; font-size: 0.95rem;">Main Dining Room</strong>
+              <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-top: 0.2rem;">Rustic wood tables, ambient jazz & warm lighting</span>
+            </div>
+          </label>
+
+          <!-- Fireplace Patio -->
+          <label class="seating-option-card" style="cursor: pointer;">
+            <input type="radio" name="seating_area" value="Cozy Fireplace Patio" style="display: none;" onchange="updateReservationSummary()" />
+            <div class="seating-card-inner" style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; background: var(--bg-subtle); height: 100%; transition: all 0.2s ease;">
+              <div style="font-size: 1.4rem; margin-bottom: 0.25rem;">🔥</div>
+              <strong style="display: block; font-size: 0.95rem;">Cozy Fireplace Patio</strong>
+              <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-top: 0.2rem;">Heated terrace overlooking the evening garden</span>
+            </div>
+          </label>
+
+          <!-- Chef's Counter -->
+          <label class="seating-option-card" style="cursor: pointer;">
+            <input type="radio" name="seating_area" value="Chef's Pizza Bar" style="display: none;" onchange="updateReservationSummary()" />
+            <div class="seating-card-inner" style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; background: var(--bg-subtle); height: 100%; transition: all 0.2s ease;">
+              <div style="font-size: 1.4rem; margin-bottom: 0.25rem;">👨‍🍳</div>
+              <strong style="display: block; font-size: 0.95rem;">Chef's Pizza Bar</strong>
+              <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-top: 0.2rem;">Front row counter by our 900°F stone oven</span>
+            </div>
+          </label>
+
+          <!-- Private Booth -->
+          <label class="seating-option-card" style="cursor: pointer;">
+            <input type="radio" name="seating_area" value="Private Artisan Booth" style="display: none;" onchange="updateReservationSummary()" />
+            <div class="seating-card-inner" style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; background: var(--bg-subtle); height: 100%; transition: all 0.2s ease;">
+              <div style="font-size: 1.4rem; margin-bottom: 0.25rem;">🛋️</div>
+              <strong style="display: block; font-size: 0.95rem;">Private Artisan Booth</strong>
+              <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-top: 0.2rem;">Plush secluded booth ideal for special moments</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- STEP 3: OCCASION & GUEST DETAILS -->
+      <div style="margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+          <span style="background: var(--gradient-fire); color: #fff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem;">3</span>
+          <h3 style="font-size: 1.25rem; margin: 0;">Guest Information & Occasion</h3>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group" style="margin: 0;">
+            <label class="form-label">Full Name</label>
+            <input
+              type="text"
+              name="customer_name"
+              class="form-control"
+              placeholder="e.g. Marco Rossi"
+              value="{{ user.full_name if user else '' }}"
+              required
+              oninput="updateReservationSummary()"
+            />
+          </div>
+
+          <div class="form-group" style="margin: 0;">
+            <label class="form-label">Phone Number</label>
+            <input
+              type="tel"
+              name="customer_phone"
+              class="form-control"
+              placeholder="e.g. (555) 234-5678"
+              value="{{ user.phone if user and user.phone else '' }}"
+              required
+            />
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group" style="margin: 0;">
+            <label class="form-label">Email Address (for confirmation)</label>
+            <input
+              type="email"
+              name="customer_email"
+              class="form-control"
+              placeholder="e.g. marco@example.com"
+              value="{{ user.email if user else '' }}"
+              required
+            />
+          </div>
+
+          <div class="form-group" style="margin: 0;">
+            <label class="form-label">Dining Occasion</label>
+            <select name="occasion" class="form-control" onchange="updateReservationSummary()">
+              <option value="Casual Dining">🍕 Casual Dining</option>
+              <option value="Romantic Date Night">🕯️ Romantic Date Night</option>
+              <option value="Birthday Celebration">🎂 Birthday Celebration</option>
+              <option value="Anniversary">🥂 Anniversary</option>
+              <option value="Family Gathering">👨‍👩‍👧‍👦 Family Gathering</option>
+              <option value="Business Dinner">💼 Business Dinner</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin: 0;">
+          <label class="form-label">Special Requests (Optional)</label>
+          <input
+            type="text"
+            name="special_requests"
+            class="form-control"
+            placeholder="e.g. High chair needed, celebrating 5th anniversary, quiet corner table..."
+            maxlength="200"
+          />
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; justify-content: center; font-size: 1.05rem;">
+        <span>🍽️</span> Confirm Table Reservation
+      </button>
+    </form>
+  </div>
+
+  <!-- Right: Live Visual Reservation Ticket Preview -->
+  <div class="checkout-card" style="position: sticky; top: 90px;">
+    <div style="background: var(--gradient-fire); color: #fff; padding: 1.25rem; border-radius: var(--radius-md) var(--radius-md) 0 0; text-align: center; margin: -1.75rem -1.75rem 1.5rem;">
+      <span style="font-size: 1.8rem; display: block; margin-bottom: 0.25rem;">🎫</span>
+      <h3 style="color: #fff; font-size: 1.2rem; margin: 0;">Artisan Dining Pass</h3>
+      <span style="font-size: 0.8rem; opacity: 0.9;">Crust & Flame Restaurant</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 1rem;">
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding-bottom: 0.75rem;">
+        <span style="color: var(--text-muted); font-size: 0.88rem;">Guest Name</span>
+        <strong id="preview-name" style="font-size: 0.95rem;">{{ user.full_name if user else 'Guest Patron' }}</strong>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding-bottom: 0.75rem;">
+        <span style="color: var(--text-muted); font-size: 0.88rem;">Date & Time</span>
+        <strong id="preview-datetime" style="font-size: 0.95rem; color: var(--primary);">{{ today_str }} &middot; 07:00 PM</strong>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding-bottom: 0.75rem;">
+        <span style="color: var(--text-muted); font-size: 0.88rem;">Party Size</span>
+        <strong id="preview-party" style="font-size: 0.95rem;">2 Guests</strong>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding-bottom: 0.75rem;">
+        <span style="color: var(--text-muted); font-size: 0.88rem;">Seating Area</span>
+        <strong id="preview-area" style="font-size: 0.95rem;">Main Dining Room</strong>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding-bottom: 0.75rem;">
+        <span style="color: var(--text-muted); font-size: 0.88rem;">Occasion</span>
+        <strong id="preview-occasion" style="font-size: 0.95rem;">Casual Dining</strong>
+      </div>
+
+      <div style="background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-top: 0.5rem; font-size: 0.82rem; color: var(--text-muted);">
+        <p style="margin: 0 0 0.4rem;"><strong>✨ Reservation Guarantee:</strong></p>
+        <ul style="margin: 0; padding-left: 1.2rem;">
+          <li>Tables held for 15 minutes past scheduled time.</li>
+          <li>Complimentary house garlic herb focaccia on arrival.</li>
+          <li>Zero booking fees or cancellation charges.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentParty = 2;
+  function adjustPartySize(delta) {
+    currentParty = Math.max(1, Math.min(12, currentParty + delta));
+    document.getElementById('res-party-size').value = currentParty;
+    document.getElementById('party-size-display').textContent = `${currentParty} Guest${currentParty > 1 ? 's' : ''}`;
+    updateReservationSummary();
+  }
+
+  function updateReservationSummary() {
+    const nameInput = document.querySelector('input[name="customer_name"]');
+    const dateInput = document.getElementById('res-date-input');
+    const timeRadio = document.querySelector('input[name="reservation_time"]:checked');
+    const areaRadio = document.querySelector('input[name="seating_area"]:checked');
+    const occasionSelect = document.querySelector('select[name="occasion"]');
+
+    if (nameInput && nameInput.value.trim()) {
+      document.getElementById('preview-name').textContent = nameInput.value.trim();
+    }
+    if (dateInput && timeRadio) {
+      document.getElementById('preview-datetime').textContent = `${dateInput.value} · ${timeRadio.value}`;
+    }
+    document.getElementById('preview-party').textContent = `${currentParty} Guest${currentParty > 1 ? 's' : ''}`;
+    if (areaRadio) {
+      document.getElementById('preview-area').textContent = areaRadio.value;
+    }
+    if (occasionSelect) {
+      document.getElementById('preview-occasion').textContent = occasionSelect.value;
+    }
+
+    // Highlight selected time chip
+    document.querySelectorAll('.time-slot-chip').forEach(chip => {
+      const input = chip.querySelector('input');
+      const inner = chip.querySelector('.time-chip-inner');
+      if (input && inner) {
+        if (input.checked) {
+          inner.style.background = 'var(--gradient-fire)';
+          inner.style.color = '#fff';
+          inner.style.borderColor = 'transparent';
+          inner.style.transform = 'scale(1.05)';
+        } else {
+          inner.style.background = 'var(--bg-subtle)';
+          inner.style.color = 'inherit';
+          inner.style.borderColor = 'var(--border-color)';
+          inner.style.transform = 'scale(1)';
+        }
+      }
+    });
+
+    // Highlight selected seating card
+    document.querySelectorAll('.seating-option-card').forEach(card => {
+      const input = card.querySelector('input');
+      const inner = card.querySelector('.seating-card-inner');
+      if (input && inner) {
+        if (input.checked) {
+          inner.style.borderColor = 'var(--primary)';
+          inner.style.background = 'var(--primary-soft)';
+          inner.style.boxShadow = '0 4px 14px rgba(224,49,49,0.15)';
+        } else {
+          inner.style.borderColor = 'var(--border-color)';
+          inner.style.background = 'var(--bg-subtle)';
+          inner.style.boxShadow = 'none';
+        }
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', updateReservationSummary);
+</script>
+{% endblock %}

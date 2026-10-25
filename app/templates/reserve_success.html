@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Reservation Confirmed #{{ reservation.reservation_code }} &middot; Crust & Flame{% endblock %}
+
+{% block content %}
+<div style="max-width: 680px; margin: 2.5rem auto 4rem;">
+  <!-- Success Badge -->
+  <div style="text-align: center; margin-bottom: 2rem;">
+    <div style="width: 72px; height: 72px; border-radius: 50%; background: var(--secondary-soft); color: var(--secondary); font-size: 2.2rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; box-shadow: 0 8px 24px rgba(43,138,62,0.2);">
+      ✓
+    </div>
+    <div class="section-tag" style="display: inline-block;">
+      <span>🍷</span> Table Booked Successfully
+    </div>
+    <h1 class="section-title" style="font-size: 2.2rem; margin: 0.5rem 0;">We Can't Wait to Welcome You!</h1>
+    <p class="section-subtitle" style="margin: 0 auto;">
+      A table has been reserved for your party at Crust & Flame Pizzeria. A confirmation notification has been prepared for <strong>{{ reservation.customer_email }}</strong>.
+    </p>
+  </div>
+
+  <!-- Boarding Pass Style Reservation Card -->
+  <div class="cart-card" style="padding: 0; overflow: hidden; border: 1px solid var(--border-color); box-shadow: var(--shadow-xl);">
+    <!-- Top Header Ribbon -->
+    <div style="background: var(--gradient-fire); color: #fff; padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <span style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.85;">Dine-In Reservation Pass</span>
+        <h2 style="color: #fff; font-size: 1.6rem; margin: 0.2rem 0 0;">{{ reservation.reservation_code }}</h2>
+      </div>
+      <div style="text-align: right;">
+        <span style="background: rgba(255,255,255,0.2); backdrop-filter: blur(8px); padding: 4px 12px; border-radius: var(--radius-full); font-size: 0.85rem; font-weight: 700;">
+          {{ reservation.status }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Ticket Body Details -->
+    <div style="padding: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+      <div>
+        <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Lead Guest</span>
+        <div style="font-size: 1.15rem; font-weight: 700; margin-top: 0.2rem;">{{ reservation.customer_name }}</div>
+        <div style="font-size: 0.85rem; color: var(--text-muted);">{{ reservation.customer_phone }}</div>
+      </div>
+
+      <div>
+        <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Party Size</span>
+        <div style="font-size: 1.15rem; font-weight: 700; margin-top: 0.2rem; color: var(--primary);">
+          👥 {{ reservation.party_size }} Guest{{ 's' if reservation.party_size > 1 else '' }}
+        </div>
+      </div>
+
+      <div>
+        <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Reservation Date</span>
+        <div style="font-size: 1.15rem; font-weight: 700; margin-top: 0.2rem;">
+          📅 {{ reservation.reservation_date }}
+        </div>
+      </div>
+
+      <div>
+        <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Seating Time</span>
+        <div style="font-size: 1.15rem; font-weight: 700; margin-top: 0.2rem; color: var(--accent);">
+          ⏰ {{ reservation.reservation_time }}
+        </div>
+      </div>
+
+      <div>
+        <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Atmosphere & Seating</span>
+        <div style="font-size: 1.05rem; font-weight: 700; margin-top: 0.2rem;">
+          🏛️ {{ reservation.seating_area }}
+        </div>
+      </div>
+
+      <div>
+        <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Dining Occasion</span>
+        <div style="font-size: 1.05rem; font-weight: 700; margin-top: 0.2rem;">
+          ✨ {{ reservation.occasion or 'Casual Dining' }}
+        </div>
+      </div>
+
+      {% if reservation.special_requests %}
+        <div style="grid-column: 1 / -1; background: var(--bg-subtle); padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+          <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Kitchen & Seating Notes:</span>
+          <p style="margin: 0.2rem 0 0; font-size: 0.9rem; font-style: italic;">"{{ reservation.special_requests }}"</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Location & Directions Bar -->
+    <div style="background: var(--bg-subtle); padding: 1.25rem 2rem; border-top: 1px dashed var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <strong style="display: block; font-size: 0.95rem;">Crust & Flame Artisanal Pizzeria</strong>
+        <span style="font-size: 0.85rem; color: var(--text-muted);">📍 142 Artisan Boulevard, Food District &middot; Phone: (555) 347-3866</span>
+      </div>
+
+      <div style="display: flex; gap: 0.5rem;">
+        <button type="button" class="btn btn-sm btn-secondary" onclick="window.print()">
+          <span>🖨️</span> Print Pass
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action CTA Buttons -->
+  <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem; flex-wrap: wrap;">
+    <a href="/profile" class="btn btn-primary">
+      <span>👤</span> View My Reservations & Orders
+    </a>
+    <a href="/#menu" class="btn btn-secondary">
+      <span>🍕</span> Browse Artisan Menu
+    </a>
+  </div>
+</div>
+{% endblock %}

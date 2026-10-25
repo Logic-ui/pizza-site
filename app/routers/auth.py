@@ -162,9 +162,16 @@ def user_profile(
 ):
     orders = current_user.orders
     orders_sorted = sorted(orders, key=lambda x: x.created_at, reverse=True)
+    reservations = current_user.reservations or []
+    reservations_sorted = sorted(reservations, key=lambda x: (x.reservation_date, x.reservation_time), reverse=True)
     return templates.TemplateResponse(
         "auth/profile.html",
-        {"request": request, "user": current_user, "orders": orders_sorted}
+        {
+            "request": request,
+            "user": current_user,
+            "orders": orders_sorted,
+            "reservations": reservations_sorted
+        }
     )
 
 

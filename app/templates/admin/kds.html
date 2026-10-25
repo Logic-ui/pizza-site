@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kitchen Display System (KDS) &middot; Crust & Flame</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@600;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/main.css" />
+
+  <style>
+    :root {
+      --kds-bg: #0D0F12;
+      --kds-surface: #161A20;
+      --kds-surface-elevated: #1F242D;
+      --kds-border: rgba(255, 255, 255, 0.08);
+      --kds-text: #F1F3F5;
+      --kds-text-muted: #868E96;
+      --kds-fire: #FF6B4A;
+      --kds-oven: #E03131;
+      --kds-ready: #20C997;
+    }
+
+    body {
+      background-color: var(--kds-bg) !important;
+      color: var(--kds-text) !important;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+
+    .kds-header {
+      background: var(--kds-surface);
+      border-bottom: 1px solid var(--kds-border);
+      padding: 0.85rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .kds-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .kds-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .kds-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.25rem;
+      padding: 1.25rem;
+      align-items: start;
+    }
+
+    .kds-ticket {
+      background: var(--kds-surface);
+      border-radius: 12px;
+      border: 1px solid var(--kds-border);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .kds-ticket:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .kds-ticket-header {
+      padding: 0.85rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--kds-surface-elevated);
+      border-bottom: 1px solid var(--kds-border);
+    }
+
+    .ticket-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: #fff;
+    }
+
+    .ticket-timer {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #CED4DA;
+    }
+
+    .timer-warning {
+      background: rgba(255, 146, 43, 0.25) !important;
+      color: #FF922B !important;
+    }
+
+    .timer-urgent {
+      background: rgba(224, 49, 49, 0.3) !important;
+      color: #FF6B6B !important;
+      animation: pulseAlert 1.5s infinite;
+    }
+
+    @keyframes pulseAlert {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .kds-ticket-body {
+      padding: 1rem;
+      flex: 1;
+    }
+
+    .kds-item-row {
+      padding: 0.65rem 0;
+      border-bottom: 1px dashed var(--kds-border);
+    }
+
+    .kds-item-row:last-child {
+      border-bottom: none;
+    }
+
+    .item-qty-name {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: #fff;
+    }
+
+    .kds-toppings-list {
+      margin-top: 0.35rem;
+      font-size: 0.82rem;
+      color: #ADB5BD;
+      line-height: 1.4;
+    }
+
+    .kds-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      margin-right: 4px;
+    }
+
+    .kds-badge-split {
+      background: rgba(132, 94, 247, 0.25);
+      color: #B197FC;
+      border: 1px solid rgba(132, 94, 247, 0.4);
+    }
+
+    .kds-badge-scheduled {
+      background: rgba(255, 212, 59, 0.2);
+      color: #FCC419;
+      border: 1px solid rgba(255, 212, 59, 0.4);
+    }
+
+    .kds-notes-box {
+      margin-top: 0.75rem;
+      background: rgba(245, 159, 0, 0.12);
+      border-left: 3px solid #F59F00;
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.82rem;
+      color: #FFD43B;
+    }
+
+    .kds-ticket-footer {
+      padding: 0.75rem 1rem;
+      background: var(--kds-surface-elevated);
+      border-top: 1px solid var(--kds-border);
+    }
+
+    .btn-kds-advance {
+      width: 100%;
+      padding: 0.85rem;
+      font-size: 1rem;
+      font-weight: 800;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-kds-received {
+      background: #F76707;
+      color: #fff;
+    }
+    .btn-kds-received:hover {
+      background: #D9480F;
+    }
+
+    .btn-kds-oven {
+      background: #E03131;
+      color: #fff;
+    }
+    .btn-kds-oven:hover {
+      background: #C92A2A;
+    }
+
+    .btn-kds-dispatch {
+      background: #20C997;
+      color: #000;
+    }
+    .btn-kds-dispatch:hover {
+      background: #12B886;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header Bar -->
+  <header class="kds-header">
+    <div class="kds-brand">
+      <span style="font-size: 1.5rem;">🔥</span>
+      <span>Crust &amp; Flame <span style="color: var(--kds-fire);">KDS Pro</span></span>
+      <span style="font-size: 0.75rem; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 20px; color: var(--kds-text-muted);">
+        Live Kitchen Display
+      </span>
+    </div>
+
+    <div class="kds-controls">
+      <!-- Audio Chime Toggle -->
+      <button type="button" class="btn btn-sm btn-secondary" id="kds-sound-btn" onclick="toggleKdsSound()">
+        <span id="sound-icon">🔊</span> <span id="sound-label">Audio Chimes: ON</span>
+      </button>
+
+      <!-- Fullscreen Toggle -->
+      <button type="button" class="btn btn-sm btn-secondary" onclick="toggleFullscreen()">
+        <span>⛶</span> Fullscreen
+      </button>
+
+      <!-- Return to Admin -->
+      <a href="/admin/orders" class="btn btn-sm btn-primary">
+        &larr; Exit to Dashboard
+      </a>
+    </div>
+  </header>
+
+  <!-- KDS Active Orders Grid -->
+  <main class="kds-grid" id="kds-orders-container">
+    {% for ord in orders %}
+      {% set elapsed_mins = ((ord.created_at.now() - ord.created_at).total_seconds() / 60)|int if ord.created_at else 0 %}
+      <article class="kds-ticket" id="kds-ticket-{{ ord.id }}" data-status="{{ ord.status }}" data-created="{{ ord.created_at.isoformat() if ord.created_at else '' }}">
+        <!-- Header -->
+        <div class="kds-ticket-header">
+          <div>
+            <span class="ticket-num">#{{ ord.order_number or ord.id }}</span>
+            <div style="font-size: 0.75rem; color: var(--kds-text-muted); margin-top: 2px;">
+              {{ ord.order_type|upper }} &middot; {{ ord.customer_name.split(' ')[0] }}
+            </div>
+          </div>
+
+          <div style="text-align: right;">
+            <div class="ticket-timer {% if elapsed_mins >= 25 %}timer-urgent{% elif elapsed_mins >= 15 %}timer-warning{% endif %}">
+              ⏱️ <span class="timer-val">{{ elapsed_mins }}m</span>
+            </div>
+            {% if ord.scheduled_time and ord.scheduled_time != 'ASAP' %}
+              <div class="kds-badge kds-badge-scheduled" style="margin-top: 3px;">
+                ⏰ {{ ord.scheduled_time }}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Body: Items List -->
+        <div class="kds-ticket-body">
+          {% for it in ord.items %}
+            <div class="kds-item-row">
+              <div class="item-qty-name">
+                <span>
+                  <strong style="color: var(--kds-fire); font-size: 1.15rem; margin-right: 4px;">{{ it.quantity }}x</strong>
+                  {{ it.menu_item.name if it.menu_item else 'Pizza Item' }}
+                </span>
+                <span style="font-size: 0.85rem; color: #CED4DA; font-weight: 600;">{{ it.size }}</span>
+              </div>
+
+              <!-- Crust & Sauce & Cheese -->
+              <div style="font-size: 0.8rem; color: var(--kds-text-muted); margin-top: 2px;">
+                Dough: <strong>{{ it.crust.name if it.crust else 'Standard Crust' }}</strong>
+                {% if it.sauce %}&middot; Sauce: {{ it.sauce }}{% endif %}
+                {% if it.cheese_style %}&middot; Cheese: {{ it.cheese_style }}{% endif %}
+              </div>
+
+              <!-- Split Toppings / Half & Half or Whole -->
+              {% if it.split_mode == 'half_half' %}
+                <div style="margin-top: 4px;">
+                  <span class="kds-badge kds-badge-split">Half &amp; Half</span>
+                  {% if it.half_left_details %}
+                    <div style="font-size: 0.78rem; color: #74C0FC;">
+                      <strong>◀ Left Half:</strong> {{ it.half_left_details|replace('"', '')|replace('[', '')|replace(']', '') }}
+                    </div>
+                  {% endif %}
+                  {% if it.half_right_details %}
+                    <div style="font-size: 0.78rem; color: #FF922B;">
+                      <strong>▶ Right Half:</strong> {{ it.half_right_details|replace('"', '')|replace('[', '')|replace(']', '') }}
+                    </div>
+                  {% endif %}
+                </div>
+              {% elif it.toppings %}
+                <div class="kds-toppings-list">
+                  + {{ it.toppings|map(attribute='topping_name')|join(', ') }}
+                </div>
+              {% endif %}
+
+              <!-- Special Instructions -->
+              {% if it.special_instructions %}
+                <div class="kds-notes-box">
+                  ⚠️ <em>"{{ it.special_instructions }}"</em>
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+
+          {% if ord.delivery_notes %}
+            <div class="kds-notes-box" style="margin-top: 0.75rem;">
+              🛵 <strong>Driver Note:</strong> {{ ord.delivery_notes }}
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Footer Action -->
+        <div class="kds-ticket-footer">
+          {% if ord.status == 'Received' %}
+            <button
+              type="button"
+              class="btn-kds-advance btn-kds-received"
+              onclick="advanceKdsOrder({{ ord.id }}, this)"
+            >
+              <span>🔥</span> Slide to 900°F Oven
+            </button>
+          {% elif ord.status == 'Preparing' %}
+            <button
+              type="button"
+              class="btn-kds-advance btn-kds-oven"
+              onclick="advanceKdsOrder({{ ord.id }}, this)"
+            >
+              <span>🛵</span> Mark Ready for Dispatch
+            </button>
+          {% elif ord.status == 'Out for Delivery' %}
+            <button
+              type="button"
+              class="btn-kds-advance btn-kds-dispatch"
+              onclick="advanceKdsOrder({{ ord.id }}, this)"
+            >
+              <span>✓</span> Complete Delivery
+            </button>
+          {% endif %}
+        </div>
+      </article>
+    {% else %}
+      <div style="grid-column: 1 / -1; text-align: center; padding: 5rem 1rem; color: var(--kds-text-muted);">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🍕</div>
+        <h2 style="color: #fff;">Kitchen Queue is Clear</h2>
+        <p>All pizzas have been baked and dispatched. New incoming orders will appear here automatically.</p>
+      </div>
+    {% endfor %}
+  </main>
+
+  <script>
+    let soundEnabled = true;
+
+    // Web Audio API Synthesized Restaurant Bell Chime
+    function playKitchenChime() {
+      if (!soundEnabled) return;
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Harmonic bell dual chime
+        [587.33, 880.0].forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime + (idx * 0.12));
+          
+          gain.gain.setValueAtTime(0.25, audioCtx.currentTime + (idx * 0.12));
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + (idx * 0.12) + 1.2);
+          
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          
+          osc.start(audioCtx.currentTime + (idx * 0.12));
+          osc.stop(audioCtx.currentTime + (idx * 0.12) + 1.3);
+        });
+      } catch (e) {
+        console.warn('AudioContext not allowed yet:', e);
+      }
+    }
+
+    function toggleKdsSound() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('sound-icon').textContent = soundEnabled ? '🔊' : '🔇';
+      document.getElementById('sound-label').textContent = soundEnabled ? 'Audio Chimes: ON' : 'Audio Chimes: OFF';
+      if (soundEnabled) playKitchenChime();
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => console.log(err));
+      } else {
+        document.exitFullscreen().catch(err => console.log(err));
+      }
+    }
+
+    async function advanceKdsOrder(orderId, btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳</span> Updating...';
+      try {
+        const res = await fetch(`/admin/orders/${orderId}/kds-advance`, {
+          method: 'POST',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await res.json();
+        if (data.success) {
+          playKitchenChime();
+          // Reload page to re-render updated pipeline cleanly
+          window.location.reload();
+        }
+      } catch (e) {
+        console.error('Failed to advance order:', e);
+        window.location.reload();
+      }
+    }
+
+    // Auto-refresh KDS every 15 seconds to receive new orders
+    setInterval(() => {
+      window.location.reload();
+    }, 15000);
+  </script>
+</body>
+</html>

@@ -5,6 +5,7 @@ from .order import Order, OrderItem, OrderItemTopping
 from .coupon import Coupon
 from .review import Review
 from .setting import RestaurantSetting
+from .reservation import Reservation
 
 __all__ = [
     "Base",
@@ -20,4 +21,5 @@ __all__ = [
     "Coupon",
     "Review",
     "RestaurantSetting",
+    "Reservation",
 ]

@@ -20,6 +20,7 @@ class User(Base):
     # Relationships
     orders = relationship("Order", back_populates="user", cascade="all, delete-orphan")
     reviews = relationship("Review", back_populates="user", cascade="all, delete-orphan")
+    reservations = relationship("Reservation", back_populates="user", cascade="all, delete-orphan")
 
     def loyalty_tier(self) -> str:
         pts = self.loyalty_points or 0

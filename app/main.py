@@ -11,7 +11,7 @@ from .core.database import engine, get_db, auto_migrate
 from .core.dependencies import get_current_user_optional
 from . import models
 from .services.seed import seed_database
-from .routers import auth, menu, orders, admin
+from .routers import auth, menu, orders, admin, reservations
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -88,6 +88,7 @@ app.include_router(auth.router)
 app.include_router(menu.router)
 app.include_router(orders.router)
 app.include_router(admin.router)
+app.include_router(reservations.router)
 
 
 # ----------------- STOREFRONT CORE PAGES -----------------

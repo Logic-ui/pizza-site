@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Reservations &middot; Admin | Crust & Flame{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+  <div>
+    <div class="section-tag">
+      <span>🍷</span> Host Stand & Dining Room
+    </div>
+    <h1 class="section-title">Table Reservations ({{ reservations|length }})</h1>
+    <p class="section-subtitle">
+      Manage guest reservations, seating areas, party sizes, and host stand statuses.
+    </p>
+  </div>
+
+  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+    <a href="/reserve" target="_blank" class="btn btn-primary">
+      <span>➕</span> Book New Table
+    </a>
+    <a href="/admin" class="btn btn-secondary">&larr; Back to Dashboard</a>
+  </div>
+</div>
+
+<!-- Filter Tabs -->
+<div class="menu-filter-bar" style="justify-content: flex-start; margin-bottom: 1.5rem;">
+  <a href="/admin/reservations" class="filter-btn {{ 'active' if current_filter == 'all' else '' }}">All ({{ reservations|length }})</a>
+  <a href="/admin/reservations?status_filter=Confirmed" class="filter-btn {{ 'active' if current_filter == 'Confirmed' else '' }}">Confirmed</a>
+  <a href="/admin/reservations?status_filter=Seated" class="filter-btn {{ 'active' if current_filter == 'Seated' else '' }}">Seated</a>
+  <a href="/admin/reservations?status_filter=Completed" class="filter-btn {{ 'active' if current_filter == 'Completed' else '' }}">Completed</a>
+  <a href="/admin/reservations?status_filter=Cancelled" class="filter-btn {{ 'active' if current_filter == 'Cancelled' else '' }}">Cancelled</a>
+</div>
+
+<div class="admin-card">
+  <div class="table-responsive">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Code #</th>
+          <th>Date & Time</th>
+          <th>Guest Details</th>
+          <th>Party & Seating Area</th>
+          <th>Occasion & Notes</th>
+          <th>Status</th>
+          <th>Host Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for res in reservations %}
+          <tr>
+            <td>
+              <strong style="color: var(--primary); font-size: 0.95rem;">
+                {{ res.reservation_code }}
+              </strong>
+            </td>
+            <td>
+              <span style="font-weight: 700; font-size: 0.92rem; display: block;">{{ res.reservation_date }}</span>
+              <span style="font-size: 0.82rem; color: var(--accent); font-weight: 600;">{{ res.reservation_time }}</span>
+            </td>
+            <td>
+              <strong>{{ res.customer_name }}</strong>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">{{ res.customer_phone }}</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">{{ res.customer_email }}</div>
+            </td>
+            <td>
+              <span style="display: inline-block; font-weight: 800; font-size: 0.88rem; color: var(--text-main);">
+                👥 {{ res.party_size }} Guests
+              </span>
+              <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                🏛️ {{ res.seating_area }}
+              </div>
+            </td>
+            <td>
+              <span style="font-size: 0.82rem; font-weight: 700; color: var(--primary);">
+                ✨ {{ res.occasion or 'Casual Dining' }}
+              </span>
+              {% if res.special_requests %}
+                <div style="font-size: 0.78rem; color: var(--text-muted); font-style: italic; max-width: 220px; margin-top: 2px;">
+                  "{{ res.special_requests }}"
+                </div>
+              {% endif %}
+            </td>
+            <td>
+              {% set st = res.status %}
+              <span style="display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: var(--radius-full);
+                {% if st == 'Confirmed' %}background: var(--primary-soft); color: var(--primary);
+                {% elif st == 'Seated' %}background: #E7F5FF; color: #1971C2;
+                {% elif st == 'Completed' %}background: var(--secondary-soft); color: var(--secondary);
+                {% else %}background: #FFF5F5; color: #E03131;{% endif %}">
+                {{ res.status }}
+              </span>
+            </td>
+            <td>
+              <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+                {% if res.status == 'Confirmed' %}
+                  <form method="post" action="/admin/reservations/{{ res.id }}/status">
+                    <input type="hidden" name="status" value="Seated" />
+                    <button type="submit" class="btn btn-sm btn-secondary" style="font-size: 0.75rem; padding: 4px 8px; background: #1971C2; color: #fff;">
+                      🪑 Seat Guests
+                    </button>
+                  </form>
+                {% elif res.status == 'Seated' %}
+                  <form method="post" action="/admin/reservations/{{ res.id }}/status">
+                    <input type="hidden" name="status" value="Completed" />
+                    <button type="submit" class="btn btn-sm btn-success" style="font-size: 0.75rem; padding: 4px 8px;">
+                      ✓ Complete
+                    </button>
+                  </form>
+                {% endif %}
+
+                {% if res.status != 'Cancelled' and res.status != 'Completed' %}
+                  <form method="post" action="/admin/reservations/{{ res.id }}/status" onsubmit="return confirm('Cancel reservation #{{ res.reservation_code }}?');">
+                    <input type="hidden" name="status" value="Cancelled" />
+                    <button type="submit" class="btn btn-sm btn-secondary" style="font-size: 0.75rem; padding: 4px 8px; color: #E03131;">
+                      ✕ Cancel
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem 1rem;">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">🍷</div>
+              <h3>No reservations found</h3>
+              <p>No table reservations matching the selected filter.</p>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

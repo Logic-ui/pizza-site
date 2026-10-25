@@ -94,6 +94,10 @@ def auto_migrate():
                     ("points_earned", "INTEGER DEFAULT 0"),
                     ("points_redeemed", "INTEGER DEFAULT 0"),
                     ("order_type", "VARCHAR(20) DEFAULT 'delivery'"),
+                    ("scheduled_time", "VARCHAR(50)"),
+                    ("driver_name", "VARCHAR(50) DEFAULT 'Marco Rossi'"),
+                    ("driver_phone", "VARCHAR(30) DEFAULT '+1 (555) 234-8901'"),
+                    ("driver_vehicle", "VARCHAR(50) DEFAULT 'Red Piaggio Vespa (FL-902)'"),
                     ("payment_method", "VARCHAR(30) DEFAULT 'cod'"),
                     ("payment_status", "VARCHAR(30) DEFAULT 'pending'"),
                     ("updated_at", "DATETIME"),
@@ -110,6 +114,10 @@ def auto_migrate():
                     conn.execute(text("UPDATE orders SET order_number = 'ORD-' || id WHERE order_number IS NULL"))
                     conn.execute(text("UPDATE orders SET order_type = 'delivery' WHERE order_type IS NULL"))
                     conn.execute(text("UPDATE orders SET tip_amount = 0.0 WHERE tip_amount IS NULL"))
+                    conn.execute(text("UPDATE orders SET scheduled_time = 'ASAP' WHERE scheduled_time IS NULL"))
+                    conn.execute(text("UPDATE orders SET driver_name = 'Marco Rossi' WHERE driver_name IS NULL"))
+                    conn.execute(text("UPDATE orders SET driver_phone = '+1 (555) 234-8901' WHERE driver_phone IS NULL"))
+                    conn.execute(text("UPDATE orders SET driver_vehicle = 'Red Piaggio Vespa (FL-902)' WHERE driver_vehicle IS NULL"))
                 except Exception:
                     pass
 
@@ -132,6 +140,11 @@ def auto_migrate():
                     ("unit_price", "FLOAT DEFAULT 0.0"),
                     ("line_total", "FLOAT DEFAULT 0.0"),
                     ("special_instructions", "VARCHAR(200)"),
+                    ("split_mode", "VARCHAR(20) DEFAULT 'whole'"),
+                    ("sauce", "VARCHAR(50) DEFAULT 'San Marzano Tomato'"),
+                    ("cheese_style", "VARCHAR(50) DEFAULT 'Fior di Latte'"),
+                    ("half_left_details", "TEXT"),
+                    ("half_right_details", "TEXT"),
                 ]
                 for col_name, col_type in add_cols:
                     if col_name not in columns:
@@ -143,6 +156,9 @@ def auto_migrate():
                 try:
                     conn.execute(text("UPDATE order_items SET menu_item_id = pizza_id WHERE menu_item_id IS NULL AND pizza_id IS NOT NULL"))
                     conn.execute(text("UPDATE order_items SET unit_price = price WHERE (unit_price IS NULL OR unit_price = 0) AND price IS NOT NULL"))
+                    conn.execute(text("UPDATE order_items SET split_mode = 'whole' WHERE split_mode IS NULL"))
+                    conn.execute(text("UPDATE order_items SET sauce = 'San Marzano Tomato' WHERE sauce IS NULL"))
+                    conn.execute(text("UPDATE order_items SET cheese_style = 'Fior di Latte' WHERE cheese_style IS NULL"))
                 except Exception:
                     pass
     except Exception as e:

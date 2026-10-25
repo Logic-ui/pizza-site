@@ -150,10 +150,29 @@
     </div>
   </div>
 
+  <!-- Dietary & Favorites Filter Bar -->
+  <div class="dietary-filter-bar">
+    <button class="dietary-pill active" data-diet="all" onclick="selectDietaryFilter('all', this)">
+      <span>All Menu</span>
+    </button>
+    <button class="dietary-pill" data-diet="veg" onclick="selectDietaryFilter('veg', this)">
+      <span>🌿 Vegetarian</span>
+    </button>
+    <button class="dietary-pill" data-diet="spicy" onclick="selectDietaryFilter('spicy', this)">
+      <span>🌶️ Spicy &amp; Fiery</span>
+    </button>
+    <button class="dietary-pill" data-diet="featured" onclick="selectDietaryFilter('featured', this)">
+      <span>🔥 Chef's Picks</span>
+    </button>
+    <button class="dietary-pill" data-diet="favorites" onclick="selectDietaryFilter('favorites', this)" id="diet-fav-pill">
+      <span>❤️ My Favorites (<span id="fav-counter">0</span>)</span>
+    </button>
+  </div>
+
   <!-- Category Filter Tabs -->
   <div class="menu-filter-bar">
     <button class="filter-btn active" data-category="all" onclick="selectCategory('all', this)">
-      <span>All Items</span>
+      <span>All Categories</span>
       <span class="filter-count">({{ items|length }})</span>
     </button>
     {% for cat in categories %}
@@ -183,6 +202,9 @@
         data-desc="{{ (it.description or '')|lower }}"
         data-base-price="{{ it.base_price }}"
         data-is-pizza="{{ 'true' if is_pizza else 'false' }}"
+        data-veg="{{ 'true' if it.is_vegetarian else 'false' }}"
+        data-spicy="{{ 'true' if it.is_spicy else 'false' }}"
+        data-featured="{{ 'true' if it.is_featured else 'false' }}"
       >
         <div
           class="pizza-card-img-wrap"
@@ -192,6 +214,18 @@
             title="Click to customize {{ it.name }}"
           {% endif %}
         >
+          <!-- Wishlist Heart Button -->
+          <button
+            type="button"
+            class="wishlist-btn"
+            id="fav-btn-{{ it.id }}"
+            onclick="toggleFavoriteItem(event, {{ it.id }}, '{{ it.name|replace('\'', '\\\'') }}')"
+            title="Add to Favorites"
+            aria-label="Favorite {{ it.name }}"
+          >
+            &hearts;
+          </button>
+
           <img
             src="{{ it.image_url() }}"
             alt="{{ it.name }}"
@@ -390,10 +424,32 @@
             </div>
           </div>
 
+          <!-- Half & Half Split Line & Labels -->
+          <div class="pizza-split-line" id="pizza-split-line" style="display: none;"></div>
+          <div class="pizza-split-labels" id="pizza-split-labels" style="display: none;">
+            <span class="half-tag-left">◀ Left Half</span>
+            <span class="half-tag-right">Right Half ▶</span>
+          </div>
+
           <!-- Live Visual Pill -->
           <div class="visual-pizza-badge" id="visual-pizza-badge">
             🍕 Regular (12") &middot; Neapolitan Dough
           </div>
+        </div>
+      </div>
+
+      <!-- PIZZA SPLIT STYLE: WHOLE VS HALF & HALF -->
+      <div class="customizer-section" style="padding-top: 0.5rem;">
+        <label class="form-label" style="margin-bottom: 0.5rem; font-size: 0.92rem;">Pizza Split Style</label>
+        <div class="segmented-control">
+          <label class="segment-btn active" id="modal-mode-whole-btn" onclick="setPizzaSplitMode('whole')">
+            <input type="radio" name="modal_split_mode" value="whole" checked style="display: none;" />
+            <span>● Whole Pizza</span>
+          </label>
+          <label class="segment-btn" id="modal-mode-half-btn" onclick="setPizzaSplitMode('half_half')">
+            <input type="radio" name="modal_split_mode" value="half_half" style="display: none;" />
+            <span>◐ Half &amp; Half (Split Toppings)</span>
+          </label>
         </div>
       </div>
       
@@ -517,45 +573,91 @@
         </div>
       </div>
 
-      <!-- STEP 3: EXTRA GOURMET TOPPINGS -->
+      <!-- STEP 3: ARTISAN BASE SAUCE & CHEESE CRAFT -->
       <div class="customizer-section">
         <div class="section-step-header">
           <span class="step-num">3</span>
           <div>
+            <h4 class="step-title">Artisan Sauce &amp; Cheese Craft</h4>
+            <span class="step-subtitle">Hand-spread over slow-fermented dough</span>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group" style="margin: 0;">
+            <label class="form-label">Artisan Base Sauce</label>
+            <select id="modal-sauce-select" class="form-control" onchange="recalculateModalPrice()">
+              <option value="San Marzano Tomato" data-price="0">🍅 San Marzano Tomato (Classic)</option>
+              <option value="White Garlic Ricotta" data-price="0">🧄 White Garlic Ricotta Cream</option>
+              <option value="Sweet Basil Pesto" data-price="1.00">🌿 Sweet Basil Pesto (+ $1.00)</option>
+              <option value="Spicy Arrabbiata" data-price="0">🌶️ Spicy Arrabbiata Chili</option>
+              <option value="Smoky Bourbon BBQ" data-price="0">🪵 Smoky Bourbon BBQ</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin: 0;">
+            <label class="form-label">Mozzarella Style</label>
+            <select id="modal-cheese-select" class="form-control" onchange="recalculateModalPrice()">
+              <option value="Fior di Latte" data-price="0">🧀 Fresh Fior di Latte (Traditional)</option>
+              <option value="Extra Mozzarella" data-price="1.50">✨ Extra Mozzarella Melt (+ $1.50)</option>
+              <option value="Buffalo Mozzarella" data-price="2.00">🐃 Creamy Buffalo Mozzarella (+ $2.00)</option>
+              <option value="Vegan Mozzarella" data-price="1.50">🌿 Plant-Based Vegan Mozzarella (+ $1.50)</option>
+              <option value="Light Mozzarella" data-price="0">🍃 Light Mozzarella</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 4: EXTRA GOURMET TOPPINGS & SPLIT PLACEMENT -->
+      <div class="customizer-section">
+        <div class="section-step-header">
+          <span class="step-num">4</span>
+          <div>
             <h4 class="step-title">Add Extra Gourmet Toppings</h4>
-            <span class="step-subtitle">Customize and elevate your pizza with fresh ingredients</span>
+            <span class="step-subtitle">Customize toppings across whole pie or choose left/right split</span>
           </div>
         </div>
 
         <div class="toppings-chips-grid">
           {% for tp in toppings %}
-            <label class="topping-chip">
-              <input
-                type="checkbox"
-                class="modal-topping-checkbox"
-                value="{{ tp.id }}"
-                data-name="{{ tp.name }}"
-                data-price="{{ tp.price }}"
-                onchange="recalculateModalPrice()"
-              />
-              <div class="topping-chip-inner">
-                <div class="topping-check-box">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
+            <div class="topping-item-card" id="topping-card-{{ tp.id }}">
+              <label class="topping-chip">
+                <input
+                  type="checkbox"
+                  class="modal-topping-checkbox"
+                  id="topping-check-{{ tp.id }}"
+                  value="{{ tp.id }}"
+                  data-name="{{ tp.name }}"
+                  data-price="{{ tp.price }}"
+                  data-half="whole"
+                  onchange="onToppingCheckChange({{ tp.id }})"
+                />
+                <div class="topping-chip-inner">
+                  <div class="topping-check-box">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </div>
+                  <span class="topping-name">{{ tp.name }}</span>
+                  <span class="topping-price" id="topping-price-tag-{{ tp.id }}">+${{ '%.2f'|format(tp.price) }}</span>
                 </div>
-                <span class="topping-name">{{ tp.name }}</span>
-                <span class="topping-price">+${{ '%.2f'|format(tp.price) }}</span>
+              </label>
+
+              <!-- Split Placement Control (Visible in Half & Half Mode) -->
+              <div class="topping-split-control" id="split-ctrl-{{ tp.id }}" style="display: none;">
+                <button type="button" class="split-pill-btn active" id="split-btn-whole-{{ tp.id }}" onclick="setToppingSplit({{ tp.id }}, 'whole', this)">Whole</button>
+                <button type="button" class="split-pill-btn" id="split-btn-left-{{ tp.id }}" onclick="setToppingSplit({{ tp.id }}, 'left', this)">Left ◀</button>
+                <button type="button" class="split-pill-btn" id="split-btn-right-{{ tp.id }}" onclick="setToppingSplit({{ tp.id }}, 'right', this)">▶ Right</button>
               </div>
-            </label>
+            </div>
           {% endfor %}
         </div>
       </div>
 
-      <!-- STEP 4: SPECIAL INSTRUCTIONS -->
+      <!-- STEP 5: SPECIAL INSTRUCTIONS -->
       <div class="customizer-section" style="border-bottom: none; margin-bottom: 0;">
         <div class="section-step-header">
-          <span class="step-num">4</span>
+          <span class="step-num">5</span>
           <div>
             <h4 class="step-title">Special Kitchen Instructions (Optional)</h4>
             <span class="step-subtitle">Let our pizzaiolo know your preferences</span>

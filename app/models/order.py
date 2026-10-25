@@ -33,6 +33,10 @@ class Order(Base):
     
     # Order & Payment States
     order_type = Column(String(20), default="delivery")  # 'delivery' or 'pickup'
+    scheduled_time = Column(String(50), nullable=True)  # 'ASAP' or 'Today at 7:30 PM'
+    driver_name = Column(String(50), default="Marco Rossi")
+    driver_phone = Column(String(30), default="+1 (555) 234-8901")
+    driver_vehicle = Column(String(50), default="Red Piaggio Vespa (FL-902)")
     payment_method = Column(String(30), default="cod")  # 'cod', 'card', 'online'
     payment_status = Column(String(30), default="pending")  # 'pending', 'paid', 'refunded'
     status = Column(String(50), default="Received")  # 'Received', 'Preparing', 'Out for Delivery', 'Delivered', 'Cancelled'
@@ -60,6 +64,13 @@ class OrderItem(Base):
     unit_price = Column(Float, nullable=True, default=0.0)
     line_total = Column(Float, default=0.0)
     special_instructions = Column(String(200), nullable=True)
+
+    # Half & Half & Artisan Studio Options
+    split_mode = Column(String(20), default="whole")  # 'whole' or 'half_half'
+    sauce = Column(String(50), default="San Marzano Tomato")
+    cheese_style = Column(String(50), default="Fior di Latte")
+    half_left_details = Column(Text, nullable=True)
+    half_right_details = Column(Text, nullable=True)
 
     # Relationships
     order = relationship("Order", back_populates="items")

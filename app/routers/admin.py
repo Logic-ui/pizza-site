@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Form, UploadFile, File, status
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, Response, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -7,6 +7,8 @@ from pathlib import Path
 from datetime import datetime, timedelta
 import shutil
 import os
+import io
+import csv
 from typing import Optional
 
 from ..core.database import get_db
@@ -361,4 +363,141 @@ def admin_customers(
     return templates.TemplateResponse(
         "admin/customers.html",
         {"request": request, "user": current_user, "customers": customers}
+    )
+
+
+# ----------------- KITCHEN DISPLAY SYSTEM (KDS) -----------------
+
+@router.get("/kds", response_class=HTMLResponse)
+def kitchen_display_system(
+    request: Request,
+    current_user: User = Depends(require_role(["admin", "staff"])),
+    db: Session = Depends(get_db)
+):
+    """Fullscreen touch-friendly Kitchen Display System for kitchen brigade & chefs."""
+    active_orders = (
+        db.query(Order)
+        .filter(Order.status.in_(["Received", "Preparing", "Out for Delivery"]))
+        .order_by(Order.created_at.asc())
+        .all()
+    )
+    return templates.TemplateResponse(
+        "admin/kds.html",
+        {
+            "request": request,
+            "user": current_user,
+            "orders": active_orders
+        }
+    )
+
+
+@router.post("/orders/{order_id}/kds-advance")
+def kds_advance_order(
+    order_id: int,
+    current_user: User = Depends(require_role(["admin", "staff"])),
+    db: Session = Depends(get_db)
+):
+    """Advance order to next kitchen state via AJAX or form."""
+    order = db.query(Order).filter_by(id=order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    next_status_map = {
+        "Received": "Preparing",
+        "Preparing": "Out for Delivery",
+        "Out for Delivery": "Delivered"
+    }
+
+    if order.status in next_status_map:
+        order.status = next_status_map[order.status]
+        db.commit()
+
+    return JSONResponse({
+        "success": True,
+        "order_id": order.id,
+        "new_status": order.status
+    })
+
+
+# ----------------- CSV SALES & ORDERS EXPORT -----------------
+
+@router.get("/orders/export-csv")
+def export_orders_csv(
+    current_user: User = Depends(require_role(["admin", "staff"])),
+    db: Session = Depends(get_db)
+):
+    """Generate and stream a detailed CSV spreadsheet of all restaurant orders."""
+    orders = db.query(Order).order_by(Order.created_at.desc()).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Header
+    writer.writerow([
+        "Order #",
+        "Date (UTC)",
+        "Customer Name",
+        "Customer Email",
+        "Customer Phone",
+        "Fulfillment Type",
+        "Scheduled Time",
+        "Status",
+        "Item Count",
+        "Items Summary",
+        "Subtotal ($)",
+        "Tax ($)",
+        "Delivery Fee ($)",
+        "Tip ($)",
+        "Discount ($)",
+        "Grand Total ($)",
+        "Coupon Code",
+        "Payment Method",
+        "Payment Status",
+        "Delivery Address",
+        "Delivery Notes"
+    ])
+
+    for ord in orders:
+        items_summary_parts = []
+        for it in ord.items:
+            name = it.menu_item.name if it.menu_item else "Item"
+            size = f" ({it.size})" if it.size else ""
+            split = f" [{it.split_mode}]" if it.split_mode and it.split_mode != "whole" else ""
+            items_summary_parts.append(f"{it.quantity}x {name}{size}{split}")
+        items_summary_str = " | ".join(items_summary_parts)
+
+        writer.writerow([
+            ord.order_number or f"ORD-{ord.id}",
+            ord.created_at.strftime("%Y-%m-%d %H:%M:%S") if ord.created_at else "",
+            ord.customer_name,
+            ord.customer_email,
+            ord.customer_phone or "",
+            ord.order_type or "delivery",
+            ord.scheduled_time or "ASAP",
+            ord.status,
+            len(ord.items),
+            items_summary_str,
+            f"{ord.subtotal:.2f}",
+            f"{ord.tax:.2f}",
+            f"{ord.delivery_fee:.2f}",
+            f"{ord.tip_amount:.2f}",
+            f"{ord.discount:.2f}",
+            f"{ord.total:.2f}",
+            ord.coupon_code or "",
+            ord.payment_method,
+            ord.payment_status,
+            ord.address or "",
+            ord.delivery_notes or ""
+        ])
+
+    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    filename = f"crustflame_orders_{timestamp}.csv"
+
+    return Response(
+        content=output.getvalue(),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+            "Cache-Control": "no-cache"
+        }
     )
